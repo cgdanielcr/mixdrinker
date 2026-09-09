@@ -88,7 +88,10 @@ export function addMl(
  * tilted vessel). Returns the composition that came out, so a pour can carry
  * the right mix into the destination.
  */
-export function removeMl(v: Vessel, ml: number): { taken: Record<string, number>; totalMl: number } {
+export function removeMl(
+  v: Vessel,
+  ml: number,
+): { taken: Record<string, number>; totalMl: number } {
   const available = liquidMl(v);
   const take = Math.min(ml, available);
   const taken: Record<string, number> = {};

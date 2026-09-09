@@ -20,6 +20,12 @@ export const POUR = {
   TILT_CURVE_EXP: 1.7,
   /** Below this the bottle only beads at the mouth; no measurable transfer. */
   MIN_FLOW_ML_PER_SEC: 2,
+  /**
+   * How far the bottle leans at full tilt. Past ~75 degrees it reads as
+   * upending the bottle rather than pouring from it, and the body swings far
+   * enough to cover the glass you are aiming at.
+   */
+  MAX_TILT_DEG: 72,
 } as const;
 
 export const JIGGER = {

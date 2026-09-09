@@ -4,13 +4,7 @@
  */
 
 export type IngredientCategory =
-  | 'spirit'
-  | 'liqueur'
-  | 'juice'
-  | 'syrup'
-  | 'mixer'
-  | 'bitters'
-  | 'other';
+  'spirit' | 'liqueur' | 'juice' | 'syrup' | 'mixer' | 'bitters' | 'other';
 
 export interface Ingredient {
   id: string;

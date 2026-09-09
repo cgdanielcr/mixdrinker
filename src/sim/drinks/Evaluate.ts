@@ -45,7 +45,10 @@ export function identify(v: Vessel, candidates: readonly Recipe[] = RECIPE_LIST)
     const jaccard = union === 0 ? 0 : intersection / union;
     const proportionError = proportionDistance(v, candidate);
 
-    if (jaccard > bestJaccard || (jaccard === bestJaccard && proportionError < bestProportionError)) {
+    if (
+      jaccard > bestJaccard ||
+      (jaccard === bestJaccard && proportionError < bestProportionError)
+    ) {
       best = candidate;
       bestJaccard = jaccard;
       bestProportionError = proportionError;

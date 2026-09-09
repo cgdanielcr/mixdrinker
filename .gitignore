@@ -4,3 +4,6 @@ coverage/
 .DS_Store
 *.local
 .vite/
+
+# Local dev tooling (machine-specific paths)
+.claude/
