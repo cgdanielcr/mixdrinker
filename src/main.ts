@@ -14,6 +14,7 @@ import { createWorld, itemById } from './core/World';
 import { BarScene } from './render/BarScene';
 import { Sfx } from './audio/Sfx';
 import { DebugPanel } from './ui/DebugPanel';
+import { RecipeBook } from './ui/RecipeBook';
 import './style.css';
 
 async function main(): Promise<void> {
@@ -68,13 +69,17 @@ async function main(): Promise<void> {
   const game = new Game(world, input);
   const sfx = new Sfx();
   const debug = new DebugPanel();
-  document.body.append(debug.root);
+  const book = new RecipeBook();
+  document.body.append(book.root, debug.root);
 
   // Audio cannot start until the player has interacted with the page.
   app.canvas.addEventListener('pointerdown', () => sfx.resume(), { once: false });
   window.addEventListener('keydown', (e) => {
-    if (e.key.toLowerCase() === 'm') sfx.toggleMute();
-    if (e.key.toLowerCase() === 'd') debug.toggle();
+    const key = e.key.toLowerCase();
+    if (key === 'm') sfx.toggleMute();
+    if (key === 'd') debug.toggle();
+    if (key === 'r') world.bookOpen = !world.bookOpen;
+    if (key === 'escape') world.bookOpen = false;
   });
 
   if (import.meta.env.DEV) {
@@ -96,6 +101,35 @@ async function main(): Promise<void> {
       missing: world.missing,
       overflowing: world.overflowing,
     });
+    sfx.updateShake(world.shakeIntensity);
+
+    // One-shot feedback the sim raised this frame.
+    for (const event of game.drainEvents()) {
+      switch (event.type) {
+        case 'ice':
+          sfx.clink();
+          break;
+        case 'jiggerStop':
+          sfx.tick();
+          break;
+        case 'rimmed':
+          sfx.crunch();
+          break;
+        case 'garnished':
+          sfx.thud();
+          break;
+        case 'discarded':
+          sfx.drain();
+          break;
+        case 'rejected':
+          sfx.reject();
+          break;
+        default:
+          break;
+      }
+    }
+
+    book.setOpen(world.bookOpen);
 
     smoothedFps += (ticker.FPS - smoothedFps) * 0.1;
     debug.reportFps(smoothedFps);

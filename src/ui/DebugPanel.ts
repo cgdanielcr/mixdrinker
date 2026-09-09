@@ -47,8 +47,11 @@ export class DebugPanel {
     const help = document.createElement('p');
     help.className = 'debug-help';
     help.innerHTML =
-      'Click a bottle or glass to <b>pick it up</b>. Then <b>tap</b> to put it down, or ' +
-      '<b>press and hold</b> over a glass to pour. <b>M</b> mutes, <b>D</b> hides this.';
+      '<b>Click</b> a bottle, glass, shaker or jigger to pick it up. ' +
+      '<b>Tap</b> to put it down. <b>Press and hold</b> over a vessel to pour. ' +
+      'Carry a vessel to a <b>station</b> and tap: ice, lime, sink. ' +
+      '<b>Hold</b> on the salt plate to rim. Hold the <b>shaker</b> and move fast to shake. ' +
+      '<b>R</b> book &middot; <b>M</b> mute &middot; <b>D</b> hide this.';
 
     this.root.append(title, help, this.body, label, this.result);
   }

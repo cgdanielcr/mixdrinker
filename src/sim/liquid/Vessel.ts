@@ -91,11 +91,11 @@ export function addMl(
 export function removeMl(
   v: Vessel,
   ml: number,
-): { taken: Record<string, number>; totalMl: number } {
+): { taken: Record<string, number>; dilutionMl: number; totalMl: number } {
   const available = liquidMl(v);
   const take = Math.min(ml, available);
   const taken: Record<string, number> = {};
-  if (take <= 0 || available <= 0) return { taken, totalMl: 0 };
+  if (take <= 0 || available <= 0) return { taken, dilutionMl: 0, totalMl: 0 };
 
   const share = take / available;
   for (const [id, amount] of Object.entries(v.contents)) {
@@ -106,8 +106,11 @@ export function removeMl(
       if ((v.contents[id] ?? 0) <= 1e-9) delete v.contents[id];
     }
   }
-  v.dilutionMl = Math.max(0, v.dilutionMl - v.dilutionMl * share);
-  return { taken, totalMl: take };
+  // Melt water leaves with the drink and has to be reported, not dropped:
+  // straining must not launder an over-diluted drink clean.
+  const dilutionMl = v.dilutionMl * share;
+  v.dilutionMl = Math.max(0, v.dilutionMl - dilutionMl);
+  return { taken, dilutionMl, totalMl: take };
 }
 
 /** Volume-weighted alcohol by volume of the current contents, 0..1. */

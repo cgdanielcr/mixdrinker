@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { POUR } from '../../tuning';
 import { flowRate, holdMsForMl, pourStep, stepTilt, tailMl } from './Pour';
 import { createVessel, liquidMl } from './Vessel';
+import { dilutionRatio } from './Mixing';
 
 /** Drive a full press-and-release at 60 Hz and report what ended up where. */
 function pourFor(holdMs: number, opts: { missAfterMs?: number } = {}) {
@@ -174,5 +175,87 @@ describe('pourStep', () => {
 
     expect(liquidMl(bottle)).toBe(0);
     expect(liquidMl(glass)).toBeCloseTo(30, 6);
+  });
+});
+
+describe('straining carries what belongs to the liquid', () => {
+  /** A shaken, diluted, ice-cold Margarita sitting in the tin. */
+  function shakenTin() {
+    const tin = createVessel('tin', 'shaker');
+    tin.contents = { tequila_blanco: 50, triple_sec: 25, lime_juice: 25 };
+    tin.dilutionMl = 18;
+    tin.mixed = 1;
+    tin.shaken = true;
+    tin.chilledC = -3;
+    return tin;
+  }
+
+  function strainAll(tin: ReturnType<typeof shakenTin>, glass = createVessel('g', 'rocks')) {
+    for (let i = 0; i < 120; i++) pourStep(tin, glass, 1, 1000 / 60);
+    return glass;
+  }
+
+  it('carries `shaken` across, so a strained drink is still a shaken drink', () => {
+    const glass = strainAll(shakenTin());
+    expect(glass.shaken).toBe(true);
+    expect(glass.mixed).toBeCloseTo(1, 3);
+  });
+
+  it('carries `stirred` across the same way', () => {
+    const tin = shakenTin();
+    tin.shaken = false;
+    tin.stirred = true;
+    const glass = strainAll(tin);
+    expect(glass.stirred).toBe(true);
+    expect(glass.shaken).toBe(false);
+  });
+
+  it('carries melt water, so straining cannot launder an over-diluted drink', () => {
+    const glass = strainAll(shakenTin());
+    expect(glass.dilutionMl).toBeCloseTo(18, 1);
+    expect(dilutionRatio(glass)).toBeCloseTo(18 / 118, 2);
+  });
+
+  it('conserves total volume across the strain', () => {
+    const tin = shakenTin();
+    const before = liquidMl(tin);
+    const glass = strainAll(tin);
+    expect(liquidMl(glass) + liquidMl(tin)).toBeCloseTo(before, 3);
+  });
+
+  it('blends mixedness by volume when pouring into a drink already there', () => {
+    const glass = createVessel('g', 'highball');
+    glass.contents = { cola: 100 };
+    glass.mixed = 0;
+
+    const tin = createVessel('tin', 'shaker');
+    tin.contents = { gin: 100 };
+    tin.mixed = 1;
+
+    for (let i = 0; i < 120; i++) pourStep(tin, glass, 1, 1000 / 60);
+    // Equal volumes of fully-mixed and unmixed liquid land halfway.
+    expect(glass.mixed).toBeCloseTo(0.5, 1);
+  });
+
+  it('leaves glass, rim, garnish and ice alone — those belong to the vessel', () => {
+    const glass = createVessel('g', 'rocks');
+    glass.rim = 'salt';
+    glass.garnish = ['lime_wedge'];
+    glass.ice = 3;
+
+    strainAll(shakenTin(), glass);
+
+    expect(glass.glassType).toBe('rocks');
+    expect(glass.rim).toBe('salt');
+    expect(glass.garnish).toEqual(['lime_wedge']);
+    expect(glass.ice).toBe(3);
+  });
+
+  it('spills melt water it has no room for rather than exceeding capacity', () => {
+    const tin = shakenTin();
+    const shot = createVessel('s', 'shot'); // 60 ml
+    for (let i = 0; i < 120; i++) pourStep(tin, shot, 1, 1000 / 60);
+    expect(liquidMl(shot)).toBeLessThanOrEqual(60.000001);
+    expect(tin.spilledMl).toBeGreaterThan(0);
   });
 });

@@ -7,7 +7,16 @@ import { LAYOUT, POUR } from '../tuning';
 import { createVessel } from '../sim/liquid/Vessel';
 import type { Vessel } from '../sim/types';
 
-export type ItemKind = 'bottle' | 'glass';
+export type ItemKind = 'bottle' | 'glass' | 'shaker' | 'jigger' | 'station';
+
+/**
+ * Stations act on whatever you are carrying. §6 has you drag ice *to* the
+ * glass but the glass *to* the salt plate; unifying on "bring the vessel to
+ * the station" means one rule to learn instead of two, and it is what a
+ * bartender's hands actually do. The walk is a real cost during a rush, which
+ * is the point.
+ */
+export type StationKind = 'ice' | 'salt' | 'garnish' | 'sink' | 'book';
 
 export interface WorldItem {
   id: string;
@@ -24,9 +33,10 @@ export interface WorldItem {
   label: string;
   /** For bottles: the single ingredient this bottle holds, for tinting. */
   ingredientId?: string;
-  /** Spill accumulated while making the drink currently in this glass. */
+  station?: StationKind;
+  /** Spill accumulated while making the drink currently in this vessel. */
   drinkSpillMl: number;
-  /** Seconds since the first liquid went into this glass. */
+  /** Seconds since the first liquid went into this vessel. */
   buildTimeSec: number;
 }
 
@@ -46,17 +56,26 @@ export interface World {
   pourTargetId: string | null;
   /** Where the stream is landing right now, for the renderer. */
   impact: { x: number; y: number } | null;
-  /** ml/sec leaving the held bottle this tick — drives audio and stream width. */
+  /** ml/sec leaving the held vessel this tick — drives audio and stream width. */
   flow: number;
   /** Where the pointer is, in logical pixels. The hand follows this. */
   cursor: { x: number; y: number };
   /** True while liquid is going somewhere it should not. */
   missing: boolean;
   overflowing: boolean;
+  /** The station under the cursor, when the held vessel could use it. */
+  hoveredStationId: string | null;
+  /** 0..1 while pressing a glass onto the salt plate. */
+  rimProgress: number;
+  /** 0..1 — how hard the shaker is being worked this tick. */
+  shakeIntensity: number;
+  /** The jigger just hit a measuring mark and stopped taking liquid. */
+  jiggerStopped: boolean;
+  bookOpen: boolean;
 }
 
-const BOTTLE_SHELF_Y = 1010;
-const GLASS_ROW_Y = 690;
+const BOTTLE_ROW_Y = 1035;
+const TOOL_ROW_Y = 790;
 
 /** Bottles left to right, in the order a bartender would reach for them. */
 const SHELF: { id: string; label: string }[] = [
@@ -72,34 +91,58 @@ const SHELF: { id: string; label: string }[] = [
   { id: 'cola', label: 'COLA' },
 ];
 
-const GLASSWARE: { key: string; label: string; width: number; height: number }[] = [
-  { key: 'rocks', label: 'ROCKS', width: 104, height: 116 },
-  { key: 'rocks', label: 'ROCKS', width: 104, height: 116 },
-  { key: 'coupe', label: 'COUPE', width: 132, height: 112 },
-  { key: 'highball', label: 'HIGHBALL', width: 86, height: 178 },
+const VESSELS: {
+  key: string;
+  kind: ItemKind;
+  label: string;
+  width: number;
+  height: number;
+  x: number;
+}[] = [
+  { key: 'rocks', kind: 'glass', label: 'ROCKS', width: 104, height: 116, x: 130 },
+  { key: 'rocks', kind: 'glass', label: 'ROCKS', width: 104, height: 116, x: 268 },
+  { key: 'coupe', kind: 'glass', label: 'COUPE', width: 132, height: 112, x: 424 },
+  { key: 'highball', kind: 'glass', label: 'HIGHBALL', width: 86, height: 178, x: 572 },
+  { key: 'shaker', kind: 'shaker', label: 'SHAKER', width: 96, height: 196, x: 710 },
+  { key: 'jigger', kind: 'jigger', label: 'JIGGER', width: 84, height: 80, x: 846 },
+];
+
+const STATIONS: {
+  station: StationKind;
+  label: string;
+  width: number;
+  height: number;
+  x: number;
+  y?: number;
+}[] = [
+  { station: 'ice', label: 'ICE', width: 124, height: 96, x: 986 },
+  { station: 'salt', label: 'SALT', width: 116, height: 34, x: 1130 },
+  { station: 'garnish', label: 'LIME', width: 116, height: 44, x: 1268 },
+  { station: 'sink', label: 'SINK', width: 152, height: 74, x: 1414 },
+  // The book lives on the counter, not the work band: it is the one thing
+  // you reach for mid-service, and the right of the work band is covered by
+  // the debug panel at common window sizes.
+  { station: 'book', label: 'RECIPES', width: 104, height: 130, x: 150, y: 588 },
 ];
 
 export function createWorld(): World {
   const items: WorldItem[] = [];
 
-  const bottleWidth = 58;
-  const bottleHeight = 168;
-  // Leaves room on the right for the debug panel at smaller window sizes.
-  const shelfSpan = LAYOUT.WIDTH - 520;
+  const shelfSpan = 1100;
   const gap = shelfSpan / (SHELF.length - 1);
 
   SHELF.forEach((entry, i) => {
-    const x = 130 + i * gap;
+    const x = 115 + i * gap;
     items.push({
       id: `bottle_${entry.id}`,
       kind: 'bottle',
       vessel: createVessel(`bottle_${entry.id}`, 'bottle', { contents: { [entry.id]: 700 } }),
       x,
-      y: BOTTLE_SHELF_Y,
+      y: BOTTLE_ROW_Y,
       homeX: x,
-      homeY: BOTTLE_SHELF_Y,
-      width: bottleWidth,
-      height: bottleHeight,
+      homeY: BOTTLE_ROW_Y,
+      width: 58,
+      height: 168,
       label: entry.label,
       ingredientId: entry.id,
       drinkSpillMl: 0,
@@ -107,25 +150,41 @@ export function createWorld(): World {
     });
   });
 
-  const glassSpan = 700;
-  const glassGap = glassSpan / (GLASSWARE.length - 1);
-  GLASSWARE.forEach((entry, i) => {
-    const x = 610 + i * glassGap;
+  VESSELS.forEach((spot, i) => {
     items.push({
-      id: `glass_${i}`,
-      kind: 'glass',
-      vessel: createVessel(`glass_${i}`, entry.key),
-      x,
-      y: GLASS_ROW_Y,
-      homeX: x,
-      homeY: GLASS_ROW_Y,
-      width: entry.width,
-      height: entry.height,
-      label: entry.label,
+      id: `vessel_${i}`,
+      kind: spot.kind,
+      vessel: createVessel(`vessel_${i}`, spot.key),
+      x: spot.x,
+      y: TOOL_ROW_Y,
+      homeX: spot.x,
+      homeY: TOOL_ROW_Y,
+      width: spot.width,
+      height: spot.height,
+      label: spot.label,
       drinkSpillMl: 0,
       buildTimeSec: 0,
     });
   });
+
+  for (const spot of STATIONS) {
+    items.push({
+      id: `station_${spot.station}`,
+      kind: 'station',
+      // Stations never hold liquid; the vessel keeps the item shape uniform.
+      vessel: createVessel(`station_${spot.station}`, 'jigger'),
+      x: spot.x,
+      y: spot.y ?? TOOL_ROW_Y,
+      homeX: spot.x,
+      homeY: spot.y ?? TOOL_ROW_Y,
+      width: spot.width,
+      height: spot.height,
+      label: spot.label,
+      station: spot.station,
+      drinkSpillMl: 0,
+      buildTimeSec: 0,
+    });
+  }
 
   return {
     items,
@@ -138,6 +197,11 @@ export function createWorld(): World {
     cursor: { x: LAYOUT.WIDTH / 2, y: LAYOUT.HEIGHT / 2 },
     missing: false,
     overflowing: false,
+    hoveredStationId: null,
+    rimProgress: 0,
+    shakeIntensity: 0,
+    jiggerStopped: false,
+    bookOpen: false,
   };
 }
 
@@ -150,19 +214,26 @@ export function heldItem(world: World): WorldItem | null {
   return itemById(world, world.heldId);
 }
 
-/** Bottles rotate about their base when tilted; this is where the mouth ends up. */
+/** Anything that can be picked up and poured from. */
+export function isCarryable(item: WorldItem): boolean {
+  return item.kind !== 'station';
+}
+
+/** Anything liquid can land in. Bottles have necks, so they are not targets. */
+export function isPourTarget(item: WorldItem): boolean {
+  return item.kind === 'glass' || item.kind === 'shaker' || item.kind === 'jigger';
+}
+
+/** Where liquid leaves the held vessel. */
 export function bottleMouth(item: WorldItem, tilt: number): { x: number; y: number } {
   const angle = tiltAngleRad(tilt);
-  const sin = Math.sin(angle);
-  const cos = Math.cos(angle);
-  // The mouth sits at (0, -height) from the base before rotation.
   return {
-    x: item.x + sin * item.height,
-    y: item.y - cos * item.height,
+    x: item.x + Math.sin(angle) * item.height,
+    y: item.y - Math.cos(angle) * item.height,
   };
 }
 
-/** Radians the bottle leans at a given tilt. Positive leans right. */
+/** Radians the vessel leans at a given tilt. Positive leans right. */
 export function tiltAngleRad(tilt: number): number {
   return (tilt * POUR.MAX_TILT_DEG * Math.PI) / 180;
 }
@@ -170,8 +241,8 @@ export function tiltAngleRad(tilt: number): number {
 /**
  * Where the item's base has to sit for its mouth to land on `target`.
  *
- * The player aims with the cursor, so the cursor *is* the mouth: the bottle
- * body swings around it as the tilt ramps, the way a wrist works. Pivoting the
+ * The player aims with the cursor, so the cursor *is* the mouth: the body
+ * swings around it as the tilt ramps, the way a wrist works. Pivoting the
  * other way round (mouth swinging away from a fixed base) puts the stream a
  * glass-width off target at full tilt and makes aiming guesswork.
  */
@@ -187,15 +258,15 @@ export function baseForMouthAt(
   };
 }
 
-/** Top of a glass — where liquid has to land to go in. */
+/** Top of a vessel — where liquid has to land to go in. */
 export function rimY(item: WorldItem): number {
   return item.y - item.height;
 }
 
 /**
- * Where a stream leaving `from` lands, and in which glass (if any).
- * The stream arcs slightly in the direction the bottle is leaning, so aiming
- * a heavy pour is genuinely harder than aiming a dribble.
+ * Where a stream leaving `from` lands, and in which vessel (if any).
+ * The stream arcs in the direction the bottle is leaning, so aiming a heavy
+ * pour is genuinely harder than aiming a dribble.
  */
 export function resolveStream(
   world: World,
@@ -203,19 +274,16 @@ export function resolveStream(
   tilt: number,
   exclude: WorldItem | null,
 ): { target: WorldItem | null; impact: { x: number; y: number } } {
-  const candidates = world.items.filter(
-    (i) => i.kind === 'glass' && i !== exclude && rimY(i) > from.y,
-  );
-
   let best: WorldItem | null = null;
   let bestRim = Infinity;
 
-  for (const glass of candidates) {
-    const rim = rimY(glass);
+  for (const vessel of world.items) {
+    if (!isPourTarget(vessel) || vessel === exclude) continue;
+    const rim = rimY(vessel);
+    if (rim <= from.y) continue;
     const landing = streamXAt(from, tilt, rim);
-    const halfMouth = glass.width / 2;
-    if (Math.abs(landing - glass.x) <= halfMouth && rim < bestRim) {
-      best = glass;
+    if (Math.abs(landing - vessel.x) <= vessel.width / 2 && rim < bestRim) {
+      best = vessel;
       bestRim = rim;
     }
   }
@@ -234,6 +302,5 @@ export function resolveStream(
 export function streamXAt(from: { x: number; y: number }, tilt: number, y: number): number {
   const drop = Math.max(0, y - from.y);
   // Liquid leaves a tilted bottle with some sideways speed; it arcs as it falls.
-  const lean = Math.sin(tiltAngleRad(tilt));
-  return from.x + lean * Math.sqrt(drop) * 3.4;
+  return from.x + Math.sin(tiltAngleRad(tilt)) * Math.sqrt(drop) * 3.4;
 }

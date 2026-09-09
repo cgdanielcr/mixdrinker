@@ -12,9 +12,11 @@ Per-session brief: **[CLAUDE.md](CLAUDE.md)**. Tuning history: **[DEVLOG.md](DEV
 **Phase 1 — drink prototype.** Pouring and mixing have to feel good before
 anything else gets built. No customers, dialogue or scoring UI yet.
 
-Working now: pick up and put down, free-pour with a tilt ramp, liquid fill with
-density-sorted layers, stream and splash, spills and overflow, synthesised pour
-audio, and a debug panel that evaluates the drink in the glass.
+Working now: the whole Margarita, start to finish. Pick up and put down, free-pour
+with a tilt ramp, measure with a jigger that stops on its marks, add ice, shake,
+strain, salt a rim, garnish, and dump it in the sink. Liquid renders as
+density-sorted layers with a stream, splash, spills and overflow. The recipe book
+opens on the bar and the game keeps running behind it.
 
 ## Running it
 
@@ -25,8 +27,10 @@ npm install
 npm run dev
 ```
 
-Click a bottle or glass to pick it up. Tap to put it down, or press and hold
-over a glass to pour. `M` mutes, `D` hides the debug panel.
+Click a bottle, glass, shaker or jigger to pick it up. Tap to put it down, or press
+and hold over a vessel to pour. Carry a vessel to a station and tap for ice, lime or
+the sink; hold on the salt plate to rim it. Hold the shaker and move fast to shake.
+`R` opens the recipe book, `M` mutes, `D` hides the debug panel.
 
 ```bash
 npm test     # vitest — the sim layer

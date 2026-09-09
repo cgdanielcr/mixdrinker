@@ -32,6 +32,7 @@ export class Sfx {
   private glug: OscillatorNode | null = null;
   private glugGain: GainNode | null = null;
 
+  private shakeAccumulator = 0;
   private wasPouring = false;
   private muted = false;
 
@@ -138,9 +139,53 @@ export class Sfx {
     this.burst(700, 0.1, 0.09);
   }
 
-  /** Ice, glass, or a general knock. Kept public for the next slice. */
+  /** Ice landing in a glass. */
   clink(): void {
-    this.burst(2400, 0.08, 0.06);
+    this.burst(2600, 0.1, 0.07);
+    this.burst(3400, 0.05, 0.04);
+  }
+
+  /** The jigger hitting a measuring mark — a small, definite click. */
+  tick(): void {
+    this.burst(5200, 0.06, 0.025);
+  }
+
+  /** Salt crunching onto a wet rim. */
+  crunch(): void {
+    this.burst(4200, 0.09, 0.16);
+  }
+
+  /** Something soft landing on a rim. */
+  thud(): void {
+    this.burst(420, 0.09, 0.09);
+  }
+
+  /** Everything going down the drain. */
+  drain(): void {
+    this.burst(900, 0.11, 0.34);
+  }
+
+  /** The vessel is full and will not take it. */
+  reject(): void {
+    this.burst(240, 0.1, 0.12);
+  }
+
+  /**
+   * The shaker rattle. Continuous while shaking, and the ice inside is what
+   * you can hear — intensity drives both how loud and how busy it is.
+   */
+  updateShake(intensity: number): void {
+    if (!this.ctx) return;
+    if (intensity <= 0.05) {
+      this.shakeAccumulator = 0;
+      return;
+    }
+    // Individual ice hits, fired faster the harder it is worked.
+    this.shakeAccumulator += intensity;
+    if (this.shakeAccumulator >= 1.6) {
+      this.shakeAccumulator = 0;
+      this.burst(1800 + Math.random() * 2200, 0.05 + intensity * 0.07, 0.05);
+    }
   }
 
   private burst(frequency: number, gain: number, durationSec: number): void {

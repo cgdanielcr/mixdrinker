@@ -8,7 +8,7 @@
  */
 import { POUR } from '../../tuning';
 import type { Vessel } from '../types';
-import { addMl, liquidMl, removeMl } from './Vessel';
+import { addMl, capacityLeftMl, liquidMl, removeMl } from './Vessel';
 
 /** 0..1. Rises toward 1 while the pointer is held, falls back on release. */
 export function stepTilt(tilt: number, holding: boolean, dtMs: number): number {
@@ -58,13 +58,16 @@ export function pourStep(
   if (src === dst) return empty;
 
   const wanted = flow * (dtMs / 1000);
-  const { taken, totalMl: pouredMl } = removeMl(src, wanted);
+  const { taken, dilutionMl, totalMl: pouredMl } = removeMl(src, wanted);
   if (pouredMl <= 0) return empty;
 
   if (dst === null) {
     src.spilledMl += pouredMl;
     return { transferredMl: 0, spilledMl: pouredMl, pouredMl };
   }
+
+  const beforeMl = liquidMl(dst);
+  const dstMixedBefore = dst.mixed;
 
   let transferredMl = 0;
   let spilledMl = 0;
@@ -76,16 +79,36 @@ export function pourStep(
     spilledMl += overflowMl;
   }
 
+  // Melt water travels with the drink. Without this, straining a badly
+  // over-diluted shaker into a glass would quietly wash the fault away.
+  if (dilutionMl > 0) {
+    const room = capacityLeftMl(dst);
+    const added = Math.min(dilutionMl, room);
+    dst.dilutionMl += added;
+    transferredMl += added;
+    spilledMl += dilutionMl - added;
+  }
+
   if (spilledMl > 0) src.spilledMl += spilledMl;
-  // Liquid arriving warm from a bottle pulls a chilled glass back up.
+
   if (transferredMl > 0) {
-    const before = liquidMl(dst) - transferredMl;
-    if (before > 0) {
-      dst.chilledC =
-        (dst.chilledC * before + src.chilledC * transferredMl) / (before + transferredMl);
-    } else {
-      dst.chilledC = src.chilledC;
-    }
+    /*
+     * These belong to the *liquid*, not the vessel, so they cross with it.
+     * A Margarita shaken in the tin and strained into a glass is a shaken
+     * Margarita; the glass has no idea what happened to it otherwise.
+     * (Glass type, rim, garnish and ice stay with the vessel.)
+     */
+    dst.shaken = dst.shaken || src.shaken;
+    dst.stirred = dst.stirred || src.stirred;
+    dst.mixed =
+      beforeMl > 0
+        ? (dstMixedBefore * beforeMl + src.mixed * transferredMl) / (beforeMl + transferredMl)
+        : src.mixed;
+    // Liquid arriving warm from a bottle pulls a chilled glass back up.
+    dst.chilledC =
+      beforeMl > 0
+        ? (dst.chilledC * beforeMl + src.chilledC * transferredMl) / (beforeMl + transferredMl)
+        : src.chilledC;
   }
 
   return { transferredMl, spilledMl, pouredMl };

@@ -1,4 +1,5 @@
 # LAST CALL — Browser Bartender Game
+
 ## Technical & Design Handover for Claude Code
 
 Working title: **Last Call** (rename freely). Read this whole document before writing any code.
@@ -17,7 +18,7 @@ The player is always doing three things at once:
 - **Brain** — remember who wanted what.
 - **Attention** — listen to what people are saying.
 
-Every design or technical question is answered by: *does this make those three compete harder while staying fun?*
+Every design or technical question is answered by: _does this make those three compete harder while staying fun?_
 
 Reference games to study before starting: **VA-11 Hall-A** (bartending + narrative, but no physicality — we add that), **Cook, Serve, Delicious!** (attention overload done right), **Papers, Please** (desk-as-game, ephemeral information, night-end consequences).
 
@@ -27,27 +28,27 @@ Reference games to study before starting: **VA-11 Hall-A** (bartending + narrati
 
 These are decided. Do not relitigate them without a demonstrated reason.
 
-| Question | Decision | Why |
-|---|---|---|
-| 2D or 3D | **2D** | Liquid is cheap and controllable in 2D; art production survivable; physicality is proven in 2D. |
-| Camera | **Fixed, straight-on, three bands** (see §3) | No camera logic; all attention is on the same screen. |
-| Liquid | **Faked**: visual stream + volume/color model in glass + slosh shader | 90% of feel for 5% of cost. |
-| Physics engine | **None in Phase 1** | Ice/garnish are tweened. Reconsider only in Phase 3 if needed. |
-| Pour control | Drag bottle over glass, **hold to tilt**, tilt ramps while held, flow follows tilt | Free-pour vs jigger creates the hands-skill tension. |
-| Recipe knowledge | **Physical recipe book on the bar** that costs time/attention to open | Onboarding without a tutorial wall; memorization becomes earned. |
-| Dialogue | **Ephemeral speech bubbles**, timed choices, **no conversation log** | Missing things is the point. |
-| Narrative format | **Ink** via `inkjs` | Variables, callbacks, tags, hot-reloadable text, separate from code. |
-| Score | **Tips** | Simple, thematic, composes drink quality + speed + rapport. |
-| Session | **Night ≈ 8–10 min**, ends with summary | Papers-Please-shaped loop. |
-| Run | **One week (5 nights) at one bar**; bar **reputation is HP**; tips are in-run currency | Standard roguelite grammar (run / HP / currency / meta). See §12. |
-| Randomness | **Random cast and schedule, authored people, systemic incidents**; seeded RNG per night | Random who/when; authored what they say; systems decide what happens. |
-| Bars | **Data files** (menu, shelf, clientele pool, pacing, modifiers), unlocked via meta | Bars are the "character select." |
-| Persistence | `localStorage` only: run state + meta-unlocks. **No backend, ever.** | Free, and enough. |
-| Budget | **€0** beyond the author's existing Claude plan | See §13 for the rules that follow. |
-| Renderer | **PixiJS v8** | WebGL 2D with easy custom shaders (for liquid slosh). |
-| UI | **DOM overlay** for text-heavy UI (dialogue choices, recipe book, night summary); Pixi for the bar | Text in canvas is a pain. |
-| Language/tooling | **TypeScript strict, Vite, Vitest, ESLint, Prettier** | Standard. |
-| Audio | **Howler.js** | Pouring *sounds* are half the feel. |
+| Question         | Decision                                                                                           | Why                                                                                             |
+| ---------------- | -------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| 2D or 3D         | **2D**                                                                                             | Liquid is cheap and controllable in 2D; art production survivable; physicality is proven in 2D. |
+| Camera           | **Fixed, straight-on, three bands** (see §3)                                                       | No camera logic; all attention is on the same screen.                                           |
+| Liquid           | **Faked**: visual stream + volume/color model in glass + slosh shader                              | 90% of feel for 5% of cost.                                                                     |
+| Physics engine   | **None in Phase 1**                                                                                | Ice/garnish are tweened. Reconsider only in Phase 3 if needed.                                  |
+| Pour control     | Drag bottle over glass, **hold to tilt**, tilt ramps while held, flow follows tilt                 | Free-pour vs jigger creates the hands-skill tension.                                            |
+| Recipe knowledge | **Physical recipe book on the bar** that costs time/attention to open                              | Onboarding without a tutorial wall; memorization becomes earned.                                |
+| Dialogue         | **Ephemeral speech bubbles**, timed choices, **no conversation log**                               | Missing things is the point.                                                                    |
+| Narrative format | **Ink** via `inkjs`                                                                                | Variables, callbacks, tags, hot-reloadable text, separate from code.                            |
+| Score            | **Tips**                                                                                           | Simple, thematic, composes drink quality + speed + rapport.                                     |
+| Session          | **Night ≈ 8–10 min**, ends with summary                                                            | Papers-Please-shaped loop.                                                                      |
+| Run              | **One week (5 nights) at one bar**; bar **reputation is HP**; tips are in-run currency             | Standard roguelite grammar (run / HP / currency / meta). See §12.                               |
+| Randomness       | **Random cast and schedule, authored people, systemic incidents**; seeded RNG per night            | Random who/when; authored what they say; systems decide what happens.                           |
+| Bars             | **Data files** (menu, shelf, clientele pool, pacing, modifiers), unlocked via meta                 | Bars are the "character select."                                                                |
+| Persistence      | `localStorage` only: run state + meta-unlocks. **No backend, ever.**                               | Free, and enough.                                                                               |
+| Budget           | **€0** beyond the author's existing Claude plan                                                    | See §13 for the rules that follow.                                                              |
+| Renderer         | **PixiJS v8**                                                                                      | WebGL 2D with easy custom shaders (for liquid slosh).                                           |
+| UI               | **DOM overlay** for text-heavy UI (dialogue choices, recipe book, night summary); Pixi for the bar | Text in canvas is a pain.                                                                       |
+| Language/tooling | **TypeScript strict, Vite, Vitest, ESLint, Prettier**                                              | Standard.                                                                                       |
+| Audio            | **Howler.js**                                                                                      | Pouring _sounds_ are half the feel.                                                             |
 
 Explicitly rejected: Three.js, any 3D physics library, any real fluid simulation, ECS frameworks, React for the game layer.
 
@@ -145,6 +146,7 @@ data/
 ```
 
 Rules:
+
 - `sim/` has zero rendering dependencies and is where the tests live.
 - Every gameplay number lives in `data/` or a `tuning.ts` constants file. No magic numbers in systems.
 - The loop is fixed-timestep for sim, variable for render, with interpolation for held items.
@@ -282,7 +284,7 @@ interface Meta {
 4. Dilution window: shaking too long or letting it sit on ice too long → `over_diluted`.
 5. Spillage and time are reported as tags, and feed tips separately (not the drink score).
 
-Score → customer reaction is *not* in Evaluate. Reactions live in `Reactions.ts` and depend on the customer: a demanding sober customer sends back a 72; a friendly drunk one thanks you for it.
+Score → customer reaction is _not_ in Evaluate. Reactions live in `Reactions.ts` and depend on the customer: a demanding sober customer sends back a 72; a friendly drunk one thanks you for it.
 
 ---
 
@@ -303,7 +305,7 @@ Phase 1 verbs are marked ★.
 - Stir (Phase 3), crushed ice, layering, float, muddle (later, if ever).
 - Serve (Phase 2), Water / Food / Cut off (Phase 2–3), talk (Phase 4).
 
-Free-pour counting: a real bartender counts "one-two-three-four" ≈ 30ml at a steady pour. Tune the ramp so that a full tilt pours ~10 ml per 100ms *after* the ramp, making a 45ml pour a ~0.6s hold. The player should be able to learn this with their body.
+Free-pour counting: a real bartender counts "one-two-three-four" ≈ 30ml at a steady pour. Tune the ramp so that a full tilt pours ~10 ml per 100ms _after_ the ramp, making a 45ml pour a ~0.6s hold. The player should be able to learn this with their body.
 
 ---
 
@@ -312,6 +314,7 @@ Free-pour counting: a real bartender counts "one-two-three-four" ≈ 30ml at a s
 Goal, in the author's words: **make pouring and mixing feel fucking good.**
 
 ### Scope
+
 - Work band and counter band only. No customers.
 - Ingredients: tequila, triple sec, lime juice, simple syrup, gin, vermouth, soda, cola, orange juice, grenadine. (10 is enough to test color mixing and layering.)
 - Vessels: 2 rocks glasses, 1 coupe, 1 highball, shaker, jigger, ice bucket, salt plate, lime wedges, sink.
@@ -331,6 +334,7 @@ Goal, in the author's words: **make pouring and mixing feel fucking good.**
 Only if this feels dead after tuning: try a **2D particle stream** (≈100–300 particles, simple gravity + spring toward stream center, rendered as a metaball-ish blur). Do **not** attempt SPH/PBF or any real fluid solver.
 
 ### Acceptance criteria — Phase 1 is done when
+
 - [ ] A person who has never seen the game can make a Margarita with the recipe book open in under 90 seconds, with no text instructions besides the book.
 - [ ] Free-pouring 45ml ±5ml is learnable with practice (test: 5 pours in a row after 3 minutes of play).
 - [ ] Pouring has audible and visible feedback on: start, steady flow, stop, impact, near-full, overflow, miss.
@@ -338,16 +342,17 @@ Only if this feels dead after tuning: try a **2D particle stream** (≈100–300
 - [ ] Layering visibly works for Tequila Sunrise and disappears when shaken.
 - [ ] `Evaluate` has unit tests for: perfect drink, each single fault, unidentifiable drink, tolerances.
 - [ ] Stable 60fps on a mid-range laptop with 6 vessels on screen, one pouring.
-- [ ] Recording a 20-second clip of someone pouring makes *you* want to play it.
+- [ ] Recording a 20-second clip of someone pouring makes _you_ want to play it.
 
 ### Explicitly out of scope for Phase 1
+
 Customers, time pressure, scoring UI, tips, dialogue, saving, menus, art polish beyond readable placeholders.
 
 ---
 
 ## 8. Phases 2–5 (summary; detailed specs written when each phase starts)
 
-**Phase 2 — Customers.** Seats, arrivals from a *seeded* generator (walk-in archetypes only), order bubble, patience bar, serve-by-drag, reaction from `DrinkResult × personality × bac`, intoxication rising per drink and decaying per game-minute, tips, customer leaves. Verbs: serve, water. End condition: night clock runs out → placeholder summary listing every event flag and the seed.
+**Phase 2 — Customers.** Seats, arrivals from a _seeded_ generator (walk-in archetypes only), order bubble, patience bar, serve-by-drag, reaction from `DrinkResult × personality × bac`, intoxication rising per drink and decaying per game-minute, tips, customer leaves. Verbs: serve, water. End condition: night clock runs out → placeholder summary listing every event flag and the seed.
 
 **Phase 3 — Pressure and the run.** Pacing curves per bar per night (calm → rush → last call). Multiple simultaneous orders, second rounds, reorder-while-you're-shaking, special requests ("no salt", "make it a double"). Verbs: cut off, food. Stir as a real technique. Then the **run loop**: bar select (one bar), five nights, reputation as HP, tips spent between nights on a tiny shop (restock, garnish, recipe), fired-at-zero, run summary. Tuning goal: "I have too much going on" around minute 6 of night 3, and the player still wants night 4.
 
@@ -355,7 +360,7 @@ Customers, time pressure, scoring UI, tips, dialogue, saving, menus, art polish 
 
 **Phase 5 — Narrative and meta.** Incident templates (fight, hookup, drunk driver, walkout, someone who shouldn't have been served) triggered by state combinations; night and run summaries read from flags; a second bar; meta-unlocks (bars, recipes, regulars, one starting perk); 4–6 named regulars total. Multiple endings emerge from incidents × story flags, not from a scripted ending list.
 
-**Roguelite rule for all phases:** anything that decides *who or when* uses `Rng.ts` with the night seed. Anything that decides *what they say* is authored in Ink and gated by flags. Anything that decides *what happens between people* is an incident template evaluated by the sim. Never mix the three.
+**Roguelite rule for all phases:** anything that decides _who or when_ uses `Rng.ts` with the night seed. Anything that decides _what they say_ is authored in Ink and gated by flags. Anything that decides _what happens between people_ is an incident template evaluated by the sim. Never mix the three.
 
 ---
 
@@ -374,17 +379,17 @@ Go through this for every interaction, every phase.
 
 ## 10. Risks and how we de-risk them
 
-| Risk | Mitigation |
-|---|---|
-| Pouring feels like a slider with graphics | Phase 1 acceptance criteria; particle-stream fallback; don't start Phase 2 until §7 passes. |
-| Overload tips from fun into frustration | Pacing lives in `nights/*.json`, tuned by playtesting, never hardcoded. Patience drains slower than it feels. Always let the player recover with one good drink. |
-| Ephemeral dialogue feels unfair | Bubbles dwell long enough to read twice; important lines get a subtle audio cue *and* a visual tell (customer leans in); the callback question offers "I'm sorry, remind me?" as a branch with a rapport cost, not a fail. |
-| Narrative content volume | Ink hot reload; generic walk-ins reuse a small pool of ambient lines; named characters are few (3–5 for a first release). |
-| Scope creep in physics | Physics engine is banned until a specific interaction demonstrably needs it. |
-| Browser performance | Sim is cheap; rendering is the cost. Budget: ≤ 200 draw calls, one shader for all liquid fills. |
-| Random nights feel like a slot machine, not a story | Beats are authored and gated; the generator seats people, it doesn't write them. Every named regular has a beat available on every night they appear. |
-| Runs feel samey across bars | Bars differ in *verbs and constraints* (shelf, menu, seats, modifiers), not only numbers. A dive bar with no shaker is a different game from a hotel bar with eight liqueurs. |
-| Meta-progression becomes grind | Unlocks are mostly *content* (a new regular, a new bar), not stat boosts. One perk slot, never more. |
+| Risk                                                | Mitigation                                                                                                                                                                                                                 |
+| --------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Pouring feels like a slider with graphics           | Phase 1 acceptance criteria; particle-stream fallback; don't start Phase 2 until §7 passes.                                                                                                                                |
+| Overload tips from fun into frustration             | Pacing lives in `nights/*.json`, tuned by playtesting, never hardcoded. Patience drains slower than it feels. Always let the player recover with one good drink.                                                           |
+| Ephemeral dialogue feels unfair                     | Bubbles dwell long enough to read twice; important lines get a subtle audio cue _and_ a visual tell (customer leans in); the callback question offers "I'm sorry, remind me?" as a branch with a rapport cost, not a fail. |
+| Narrative content volume                            | Ink hot reload; generic walk-ins reuse a small pool of ambient lines; named characters are few (3–5 for a first release).                                                                                                  |
+| Scope creep in physics                              | Physics engine is banned until a specific interaction demonstrably needs it.                                                                                                                                               |
+| Browser performance                                 | Sim is cheap; rendering is the cost. Budget: ≤ 200 draw calls, one shader for all liquid fills.                                                                                                                            |
+| Random nights feel like a slot machine, not a story | Beats are authored and gated; the generator seats people, it doesn't write them. Every named regular has a beat available on every night they appear.                                                                      |
+| Runs feel samey across bars                         | Bars differ in _verbs and constraints_ (shelf, menu, seats, modifiers), not only numbers. A dive bar with no shaker is a different game from a hotel bar with eight liqueurs.                                              |
+| Meta-progression becomes grind                      | Unlocks are mostly _content_ (a new regular, a new bar), not stat boosts. One perk slot, never more.                                                                                                                       |
 
 ---
 
@@ -418,7 +423,7 @@ Generation is deterministic from `(seed, barId, night, runFlags)`. Same inputs, 
 
 The author will spend nothing beyond their existing Claude plan. This is a constraint, not a preference. Concretely:
 
-- **Libraries:** MIT/BSD/Apache only. Current stack qualifies: Vite, TypeScript, PixiJS, inkjs, Howler, Vitest. Before adding *any* dependency, check the license and that it has no paid tier we'd need.
+- **Libraries:** MIT/BSD/Apache only. Current stack qualifies: Vite, TypeScript, PixiJS, inkjs, Howler, Vitest. Before adding _any_ dependency, check the license and that it has no paid tier we'd need.
 - **Hosting:** GitHub Pages (via GitHub Actions, free for public repos) or itch.io (free, supports HTML5 uploads, has a built-in audience). Both. No custom domain.
 - **No backend, no analytics, no accounts, no cloud saves.** `localStorage` only. If a feature needs a server, it's out.
 - **Art:** self-made placeholder shapes in Phase 1–3. Later: **Kenney.nl** (CC0), OpenGameArt (CC0/CC-BY only, credit in-game), or self-drawn in **LibreSprite**, **Piskel**, **Krita**, or **Inkscape** (all free). Aseprite is paid; don't assume it.
@@ -442,6 +447,7 @@ The author will spend nothing beyond their existing Claude plan. This is a const
 - Commit small, message in the imperative, one feature per commit.
 
 ### First session
+
 1. Scaffold: Vite + TS strict + Pixi 8 + Vitest + ESLint/Prettier. `npm run dev` shows the three bands with placeholder rectangles and a cursor-following "hand."
 2. Implement `Vessel`, `Pour`, `Mixing`, `Evaluate` in `sim/` with tests, driven by `data/ingredients.json` and `data/recipes/`.
 3. Pick-up / put-down / pour (bottle → rocks glass) with glass fill rendering and the pour sound. Stop there and report what it feels like.

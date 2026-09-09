@@ -33,6 +33,31 @@ export const JIGGER = {
   STOPS_ML: [30, 45, 60],
 } as const;
 
+export const STATION = {
+  /** How long a glass has to be pressed into the salt to take a rim. */
+  RIM_MS: 550,
+  /** Cubes added per tap on the ice bucket. */
+  ICE_PER_TAP: 1,
+  /** Cooldown so one press does not dump the whole bucket in. */
+  ICE_COOLDOWN_MS: 130,
+} as const;
+
+export const SHAKE = {
+  /**
+   * Pointer speed (logical px/sec) where shaking starts to register, and where
+   * it counts as full effort. The player's arm is the input (§6).
+   */
+  MIN_SPEED: 700,
+  FULL_SPEED: 2600,
+  /**
+   * A shaker being worked hard is not also pouring. Above this intensity the
+   * tilt stops producing flow, which is what lets one gesture do both jobs.
+   */
+  SUPPRESS_POUR_ABOVE: 0.12,
+  /** Screen shake amplitude in logical px at full intensity. */
+  SCREEN_SHAKE_PX: 7,
+} as const;
+
 export const ICE = {
   /** Volume one cube displaces in a vessel. */
   CUBE_ML: 20,
