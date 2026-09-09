@@ -1,3 +1,7 @@
 dist/
 coverage/
 node_modules/
+
+# The spec documents are the author's; do not reformat them.
+HANDOVER.md
+CLAUDE.md
