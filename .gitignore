@@ -7,3 +7,4 @@ coverage/
 
 # Local dev tooling (machine-specific paths)
 .claude/
+dist-single/

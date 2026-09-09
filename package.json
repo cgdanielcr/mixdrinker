@@ -12,7 +12,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "lint": "eslint .",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "build:single": "vite build --config vite.single.config.ts && node scripts/build-single.mjs"
   },
   "dependencies": {
     "pixi.js": "^8.20.1"
