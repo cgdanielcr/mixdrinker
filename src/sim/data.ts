@@ -8,8 +8,10 @@ import margarita from '../../data/recipes/margarita.json';
 import ginTonic from '../../data/recipes/gin_tonic.json';
 import tequilaSunrise from '../../data/recipes/tequila_sunrise.json';
 import martini from '../../data/recipes/martini.json';
+import archetypesJson from '../../data/customers/archetypes.json';
+import diveBar from '../../data/bars/dive.json';
 
-import type { Ingredient, Recipe, VesselDef } from './types';
+import type { Bar, CustomerDef, Ingredient, Recipe, VesselDef } from './types';
 
 export const INGREDIENTS: Readonly<Record<string, Ingredient>> = ingredientsJson as Record<
   string,
@@ -28,6 +30,27 @@ export const RECIPES: Readonly<Record<string, Recipe>> = Object.freeze(
 );
 
 export const RECIPE_LIST: readonly Recipe[] = Object.values(RECIPES);
+
+export const CUSTOMER_DEFS: Readonly<Record<string, CustomerDef>> = archetypesJson as Record<
+  string,
+  CustomerDef
+>;
+
+export const BARS: Readonly<Record<string, Bar>> = Object.freeze(
+  Object.fromEntries(([diveBar] as unknown as Bar[]).map((b) => [b.id, b])),
+);
+
+export function customerDef(id: string): CustomerDef {
+  const found = CUSTOMER_DEFS[id];
+  if (!found) throw new Error(`Unknown customer: ${id}`);
+  return found;
+}
+
+export function bar(id: string): Bar {
+  const found = BARS[id];
+  if (!found) throw new Error(`Unknown bar: ${id}`);
+  return found;
+}
 
 export function ingredient(id: string): Ingredient {
   const found = INGREDIENTS[id];
@@ -59,6 +82,25 @@ export function validateData(): void {
         throw new Error(`Recipe "${r.id}" ingredient "${ri.id}" has toleranceMl <= 0`);
       }
     }
+  }
+  for (const [id, def] of Object.entries(CUSTOMER_DEFS)) {
+    if (id !== def.id) throw new Error(`Customer key "${id}" does not match its id "${def.id}"`);
+  }
+  for (const b of Object.values(BARS)) {
+    for (const recipeId of b.menu) {
+      if (!RECIPES[recipeId]) throw new Error(`Bar "${b.id}" menus unknown recipe "${recipeId}"`);
+    }
+    for (const ingredientId of b.shelf) {
+      if (!INGREDIENTS[ingredientId]) {
+        throw new Error(`Bar "${b.id}" shelves unknown ingredient "${ingredientId}"`);
+      }
+    }
+    for (const entry of b.clientele) {
+      if (!CUSTOMER_DEFS[entry.customerId]) {
+        throw new Error(`Bar "${b.id}" lists unknown customer "${entry.customerId}"`);
+      }
+    }
+    if (b.pacing.length === 0) throw new Error(`Bar "${b.id}" has no pacing curve`);
   }
   for (const [id, ing] of Object.entries(INGREDIENTS)) {
     if (id !== ing.id) throw new Error(`Ingredient key "${id}" does not match its id "${ing.id}"`);

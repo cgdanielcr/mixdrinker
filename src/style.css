@@ -10,6 +10,12 @@
   box-sizing: border-box;
 }
 
+/* A class that sets `display` outranks the hidden attribute, which silently
+   leaves overlays covering the game. Make hidden mean hidden. */
+[hidden] {
+  display: none !important;
+}
+
 html,
 body {
   margin: 0;
@@ -218,4 +224,163 @@ body {
   font-style: italic;
   opacity: 0.72;
   line-height: 1.5;
+}
+
+/* ------------------------------------------------------------------ HUD */
+
+.hud {
+  position: fixed;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  min-width: 340px;
+  padding: 8px 16px 10px;
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-line);
+  border-radius: 10px;
+  backdrop-filter: blur(6px);
+  user-select: none;
+  z-index: 15;
+}
+
+.hud-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 22px;
+}
+
+.hud-time {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 2px;
+}
+
+.hud-stat {
+  font-size: 12px;
+  color: var(--dim);
+}
+
+.hud-bar {
+  margin-top: 7px;
+  height: 4px;
+  border-radius: 2px;
+  background: #ffffff1a;
+  overflow: hidden;
+}
+
+.hud-bar-fill {
+  height: 100%;
+  width: 0;
+  background: #6f8fa6;
+  transition: width 0.2s linear;
+}
+
+/* Last call: the clock itself goes urgent, no extra warning needed. */
+.hud.closing .hud-time {
+  color: #ff9a8f;
+}
+
+.hud.closing .hud-bar-fill {
+  background: #d8574b;
+}
+
+/* -------------------------------------------------------- night summary */
+
+.night-summary {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 40px 20px;
+  background: #080b0ef2;
+  backdrop-filter: blur(3px);
+  z-index: 30;
+  overflow-y: auto;
+}
+
+.night-summary h2 {
+  margin: 0;
+  font-size: 15px;
+  letter-spacing: 7px;
+  color: var(--dim);
+}
+
+.summary-headline {
+  text-align: center;
+  font-size: 14px;
+  line-height: 1.8;
+}
+
+.summary-log {
+  list-style: none;
+  margin: 0;
+  padding: 14px 18px;
+  width: min(760px, 92vw);
+  max-height: 46vh;
+  overflow-y: auto;
+  background: #0f1418;
+  border: 1px solid var(--panel-line);
+  border-radius: 8px;
+  font-size: 12px;
+  line-height: 1.75;
+}
+
+.summary-log .event {
+  display: grid;
+  grid-template-columns: 52px 84px 1fr;
+  gap: 10px;
+  color: var(--dim);
+}
+
+.event-time {
+  color: #59707f;
+}
+
+.event-kind {
+  text-transform: uppercase;
+  font-size: 10px;
+  letter-spacing: 1px;
+  opacity: 0.7;
+}
+
+.event-text {
+  color: var(--ink);
+}
+
+.event.walkout .event-text,
+.event.sent_back .event-text {
+  color: #ff9a8f;
+}
+
+.event.loved .event-text {
+  color: #9fe0b4;
+}
+
+.summary-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.summary-button {
+  padding: 9px 18px;
+  background: #e8eef3;
+  color: #11171b;
+  border: 0;
+  border-radius: 7px;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.summary-button.ghost {
+  background: transparent;
+  color: var(--ink);
+  border: 1px solid var(--panel-line);
+}
+
+.summary-button:hover {
+  opacity: 0.85;
 }

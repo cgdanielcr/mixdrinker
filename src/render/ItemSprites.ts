@@ -122,6 +122,17 @@ export class ItemView {
         this.drawStation(g);
         break;
 
+      case 'seat': {
+        // The bit of counter a drink gets set down on. Deliberately faint:
+        // the customer above it is the thing to look at, not the rectangle.
+        g.roundRect(-w / 2, -h, w, h, 6).fill({ color: 0xffffff, alpha: 0.05 });
+        g.roundRect(-w / 2, -h, w, h, 6).stroke({ width: 2, color: 0xffffff, alpha: 0.12 });
+        this.label.position.set(0, 18);
+        this.label.style.fontSize = 11;
+        this.label.alpha = 0.25;
+        break;
+      }
+
       default: {
         // Open-topped tumbler: two walls and a base, so it reads as a glass.
         g.roundRect(-w / 2, -h, GLASS_WALL, h, 3).fill({ color: GLASS_STROKE, alpha: 0.55 });
@@ -201,17 +212,17 @@ export class ItemView {
     this.container.rotation = held ? tiltAngleRad(tilt) : 0;
     this.container.zIndex = held
       ? 100
-      : item.kind === 'station'
+      : item.kind === 'station' || item.kind === 'seat'
         ? 5
         : item.kind === 'bottle'
           ? 1
           : 10;
 
     // Highlight a station the held vessel could actually use.
-    const wants = world.hoveredStationId === item.id ? 1 : 0;
+    const wants = world.hoveredTargetId === item.id ? 1 : 0;
     this.highlight = damp(this.highlight, wants, 16, dtSec);
 
-    if (item.kind === 'station') {
+    if (item.kind === 'station' || item.kind === 'seat') {
       this.drawStationOverlay(world);
       return;
     }

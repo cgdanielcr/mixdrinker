@@ -7,7 +7,7 @@
 import { Application } from 'pixi.js';
 import { LAYOUT } from './tuning';
 import { validateData } from './sim/data';
-import { fillFraction } from './sim/liquid/Vessel';
+import { discard, fillFraction } from './sim/liquid/Vessel';
 import { Game } from './core/Game';
 import { Input } from './core/Input';
 import { createWorld, itemById } from './core/World';
@@ -15,6 +15,11 @@ import { BarScene } from './render/BarScene';
 import { Sfx } from './audio/Sfx';
 import { DebugPanel } from './ui/DebugPanel';
 import { RecipeBook } from './ui/RecipeBook';
+import { Hud } from './ui/Hud';
+import { NightSummary } from './ui/NightSummary';
+import { createNight } from './core/Night';
+import { bar } from './sim/data';
+import { randomSeed } from './sim/run/Rng';
 import './style.css';
 
 async function main(): Promise<void> {
@@ -70,7 +75,33 @@ async function main(): Promise<void> {
   const sfx = new Sfx();
   const debug = new DebugPanel();
   const book = new RecipeBook();
-  document.body.append(book.root, debug.root);
+  const hud = new Hud();
+  const summary = new NightSummary();
+  document.body.append(book.root, hud.root, summary.root, debug.root);
+
+  // A seed in the URL replays a night exactly (§12: shareable, and free).
+  const dive = bar('dive');
+  const urlSeed = Number(new URLSearchParams(location.search).get('seed'));
+  let seed = Number.isFinite(urlSeed) && urlSeed > 0 ? urlSeed >>> 0 : randomSeed();
+
+  const beginNight = (sameSeed: boolean): void => {
+    if (!sameSeed) seed = randomSeed();
+    for (const item of world.items) {
+      discard(item.vessel);
+      item.x = item.homeX;
+      item.y = item.homeY;
+      item.drinkSpillMl = 0;
+      item.buildTimeSec = 0;
+      if (item.ingredientId) item.vessel.contents[item.ingredientId] = 700;
+    }
+    world.heldId = null;
+    world.tilt = 0;
+    world.puddles.length = 0;
+    world.bookOpen = false;
+    game.startNight(createNight(seed, dive, 1));
+  };
+  summary.onReplay = beginNight;
+  beginNight(true);
 
   // Audio cannot start until the player has interacted with the page.
   app.canvas.addEventListener('pointerdown', () => sfx.resume(), { once: false });
@@ -92,7 +123,7 @@ async function main(): Promise<void> {
   app.ticker.add((ticker) => {
     const dtMs = ticker.deltaMS;
     game.advance(dtMs);
-    scene.update(world, dtMs / 1000);
+    scene.update(world, game.night, dtMs / 1000);
 
     const target = itemById(world, world.pourTargetId);
     sfx.update({
@@ -124,12 +155,21 @@ async function main(): Promise<void> {
         case 'rejected':
           sfx.reject();
           break;
+        case 'served':
+          if (event.verdict === 'rejected') sfx.sentBack();
+          else sfx.accepted(event.verdict === 'loved');
+          break;
+        case 'nightOver':
+          sfx.bell();
+          break;
         default:
           break;
       }
     }
 
     book.setOpen(world.bookOpen);
+    hud.update(game.clock, game.night);
+    summary.update(game.night);
 
     smoothedFps += (ticker.FPS - smoothedFps) * 0.1;
     debug.reportFps(smoothedFps);

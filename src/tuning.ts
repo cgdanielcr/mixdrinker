@@ -127,6 +127,71 @@ export const EVAL = {
   TEMPERATURE_WEIGHT: 1,
 } as const;
 
+export const NIGHT = {
+  /** Game clock, in minutes past midnight. 21:00 to 02:00. */
+  OPEN_MINUTE: 21 * 60,
+  CLOSE_MINUTE: 26 * 60,
+  /** §1: a night is 8-10 real minutes. 300 game minutes fit into 9 of them. */
+  REAL_SECONDS: 540,
+  /** Seats on the counter. §3: 3 in Phase 2, up to 5 later. */
+  SEATS: 3,
+} as const;
+
+export const PATIENCE = {
+  /**
+   * Game minutes an average customer will wait for a drink they have ordered.
+   * §10: patience must drain slower than it feels, and one good drink always
+   * has to be able to pull someone back.
+   */
+  WAIT_MINUTES: 14,
+  /** Patience drains far more slowly once they have a drink in hand. */
+  DRINKING_DRAIN_SCALE: 0.16,
+  /** Patience restored by a drink, scaled by how good it was. */
+  RESTORE_ON_GREAT: 0.55,
+  RESTORE_ON_FINE: 0.3,
+  /** A rejected drink costs patience on top of the time already lost. */
+  PENALTY_ON_REJECT: 0.25,
+  /** Being served faster than this (game minutes) reads as prompt service. */
+  PROMPT_MINUTES: 6,
+} as const;
+
+export const INTOX = {
+  /** BAC added per ml of pure alcohol, before tolerance. */
+  BAC_PER_ML_ALCOHOL: 0.0013,
+  /** BAC burned off per game minute. */
+  DECAY_PER_MINUTE: 0.00025,
+  /** Above this they are visibly drunk; above CUT_OFF they should be refused. */
+  TIPSY: 0.05,
+  DRUNK: 0.09,
+  CUT_OFF: 0.14,
+} as const;
+
+export const REACTION = {
+  /** Score thresholds after the customer's own adjustment. */
+  LOVED: 85,
+  FINE: 62,
+  POOR: 40,
+  /** A demanding customer marks harder; this is the worst-case penalty. */
+  DEMANDING_PENALTY: 22,
+  /** Drink makes people generous. Full forgiveness at CUT_OFF blood alcohol. */
+  DRUNK_FORGIVENESS: 26,
+  /** Serving the wrong drink entirely is its own failure, not a low score. */
+  WRONG_DRINK_CEILING: 25,
+} as const;
+
+export const TIPS = {
+  /** What a competent, unremarkable drink earns. */
+  BASE: 3,
+  /** Multiplier at a perfect score versus a barely-acceptable one. */
+  QUALITY_SWING: 2.2,
+  /** Bonus for beating PATIENCE.PROMPT_MINUTES. */
+  PROMPT_BONUS: 1.5,
+  /** A happy customer rounds up; an annoyed one does not. */
+  MOOD_SWING: 1.4,
+  /** Nobody tips for a drink they sent back. */
+  REJECTED: 0,
+} as const;
+
 export const LAYOUT = {
   /** Fixed 16:9 logical resolution, scaled to fit (HANDOVER.md §3). */
   WIDTH: 1920,

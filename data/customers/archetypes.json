@@ -1,0 +1,38 @@
+{
+  "walkin_regular": {
+    "id": "walkin_regular",
+    "name": "Regular",
+    "archetype": true,
+    "personality": { "patience": 1.0, "demanding": 0.4, "talkative": 0.5, "tolerance": 1.0 }
+  },
+  "walkin_hurried": {
+    "id": "walkin_hurried",
+    "name": "Someone in a hurry",
+    "archetype": true,
+    "personality": { "patience": 0.55, "demanding": 0.5, "talkative": 0.2, "tolerance": 0.9 }
+  },
+  "walkin_snob": {
+    "id": "walkin_snob",
+    "name": "Knows their drinks",
+    "archetype": true,
+    "personality": { "patience": 1.1, "demanding": 0.95, "talkative": 0.4, "tolerance": 1.1 }
+  },
+  "walkin_easy": {
+    "id": "walkin_easy",
+    "name": "Easy company",
+    "archetype": true,
+    "personality": { "patience": 1.4, "demanding": 0.15, "talkative": 0.8, "tolerance": 1.2 }
+  },
+  "walkin_lightweight": {
+    "id": "walkin_lightweight",
+    "name": "Lightweight",
+    "archetype": true,
+    "personality": { "patience": 1.0, "demanding": 0.3, "talkative": 0.6, "tolerance": 0.55 }
+  },
+  "walkin_hardcase": {
+    "id": "walkin_hardcase",
+    "name": "Hard case",
+    "archetype": true,
+    "personality": { "patience": 0.8, "demanding": 0.6, "talkative": 0.3, "tolerance": 1.6 }
+  }
+}

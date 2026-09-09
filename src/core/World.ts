@@ -3,11 +3,11 @@
  * Geometry lives here because "did the stream hit the glass?" is a gameplay
  * question (HANDOVER.md §6), not a rendering one.
  */
-import { LAYOUT, POUR } from '../tuning';
+import { LAYOUT, NIGHT, POUR } from '../tuning';
 import { createVessel } from '../sim/liquid/Vessel';
 import type { Vessel } from '../sim/types';
 
-export type ItemKind = 'bottle' | 'glass' | 'shaker' | 'jigger' | 'station';
+export type ItemKind = 'bottle' | 'glass' | 'shaker' | 'jigger' | 'station' | 'seat';
 
 /**
  * Stations act on whatever you are carrying. §6 has you drag ice *to* the
@@ -34,6 +34,8 @@ export interface WorldItem {
   /** For bottles: the single ingredient this bottle holds, for tinting. */
   ingredientId?: string;
   station?: StationKind;
+  /** For seats: which counter position this is. */
+  seatIndex?: number;
   /** Spill accumulated while making the drink currently in this vessel. */
   drinkSpillMl: number;
   /** Seconds since the first liquid went into this vessel. */
@@ -63,8 +65,8 @@ export interface World {
   /** True while liquid is going somewhere it should not. */
   missing: boolean;
   overflowing: boolean;
-  /** The station under the cursor, when the held vessel could use it. */
-  hoveredStationId: string | null;
+  /** The station or seat under the cursor that the held vessel could use. */
+  hoveredTargetId: string | null;
   /** 0..1 while pressing a glass onto the salt plate. */
   rimProgress: number;
   /** 0..1 — how hard the shaker is being worked this tick. */
@@ -76,6 +78,8 @@ export interface World {
 
 const BOTTLE_ROW_Y = 1035;
 const TOOL_ROW_Y = 790;
+/** The counter lip, where drinks get handed over. */
+const COUNTER_SPOT_Y = 588;
 
 /** Bottles left to right, in the order a bartender would reach for them. */
 const SHELF: { id: string; label: string }[] = [
@@ -167,6 +171,29 @@ export function createWorld(): World {
     });
   });
 
+  // Serving spots on the counter, one per seat (§3). The customer stands in
+  // the band above; this is the bit of bar you put the glass down on.
+  const seatSpan = 1000;
+  const seatGap = seatSpan / Math.max(1, NIGHT.SEATS - 1);
+  for (let seat = 0; seat < NIGHT.SEATS; seat++) {
+    const x = 420 + seat * seatGap;
+    items.push({
+      id: `seat_${seat}`,
+      kind: 'seat',
+      vessel: createVessel(`seat_${seat}`, 'jigger'),
+      x,
+      y: COUNTER_SPOT_Y,
+      homeX: x,
+      homeY: COUNTER_SPOT_Y,
+      width: 150,
+      height: 26,
+      label: `SEAT ${seat + 1}`,
+      seatIndex: seat,
+      drinkSpillMl: 0,
+      buildTimeSec: 0,
+    });
+  }
+
   for (const spot of STATIONS) {
     items.push({
       id: `station_${spot.station}`,
@@ -197,7 +224,7 @@ export function createWorld(): World {
     cursor: { x: LAYOUT.WIDTH / 2, y: LAYOUT.HEIGHT / 2 },
     missing: false,
     overflowing: false,
-    hoveredStationId: null,
+    hoveredTargetId: null,
     rimProgress: 0,
     shakeIntensity: 0,
     jiggerStopped: false,
@@ -216,7 +243,12 @@ export function heldItem(world: World): WorldItem | null {
 
 /** Anything that can be picked up and poured from. */
 export function isCarryable(item: WorldItem): boolean {
-  return item.kind !== 'station';
+  return item.kind !== 'station' && item.kind !== 'seat';
+}
+
+/** A place you can hand a drink over: a station you can use, or a seat. */
+export function isActionTarget(item: WorldItem): boolean {
+  return item.kind === 'station' || item.kind === 'seat';
 }
 
 /** Anything liquid can land in. Bottles have necks, so they are not targets. */

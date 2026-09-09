@@ -165,6 +165,49 @@ export class Sfx {
     this.burst(900, 0.11, 0.34);
   }
 
+  /** A drink handed over and accepted — a warm little chime, not a fanfare. */
+  accepted(great: boolean): void {
+    this.tone(great ? 660 : 480, 0.06, 0.16);
+    if (great) this.tone(880, 0.05, 0.2);
+  }
+
+  /** A drink pushed back across the bar. Mistakes are louder (§9). */
+  sentBack(): void {
+    this.tone(190, 0.1, 0.3);
+    this.burst(320, 0.08, 0.2);
+  }
+
+  /** Last call. */
+  bell(): void {
+    this.tone(520, 0.09, 0.7);
+    this.tone(392, 0.07, 0.9);
+  }
+
+  /** A clean pitched note, for the things that are not impacts. */
+  private tone(frequency: number, gain: number, durationSec: number): void {
+    const ctx = this.ctx;
+    const master = this.master;
+    if (!ctx || !master) return;
+
+    const osc = ctx.createOscillator();
+    osc.type = 'triangle';
+    osc.frequency.value = frequency;
+
+    const level = ctx.createGain();
+    const now = ctx.currentTime;
+    level.gain.setValueAtTime(0, now);
+    level.gain.linearRampToValueAtTime(gain, now + 0.012);
+    level.gain.exponentialRampToValueAtTime(0.0001, now + durationSec);
+
+    osc.connect(level).connect(master);
+    osc.start(now);
+    osc.stop(now + durationSec + 0.02);
+    osc.onended = () => {
+      osc.disconnect();
+      level.disconnect();
+    };
+  }
+
   /** The vessel is full and will not take it. */
   reject(): void {
     this.burst(240, 0.1, 0.12);

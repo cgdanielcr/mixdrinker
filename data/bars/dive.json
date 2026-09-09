@@ -1,0 +1,40 @@
+{
+  "id": "dive",
+  "name": "The Long Pour",
+  "menu": ["margarita", "gin_tonic", "tequila_sunrise", "martini"],
+  "shelf": [
+    "tequila_blanco",
+    "triple_sec",
+    "lime_juice",
+    "simple_syrup",
+    "gin",
+    "dry_vermouth",
+    "soda",
+    "cola",
+    "orange_juice",
+    "grenadine"
+  ],
+  "seats": 3,
+  "clientele": [
+    { "customerId": "walkin_regular", "weight": 30 },
+    { "customerId": "walkin_hurried", "weight": 20 },
+    { "customerId": "walkin_easy", "weight": 20 },
+    { "customerId": "walkin_snob", "weight": 12 },
+    { "customerId": "walkin_lightweight", "weight": 10 },
+    { "customerId": "walkin_hardcase", "weight": 8 }
+  ],
+  "pacing": [
+    {
+      "night": 1,
+      "curve": [
+        [0, 0.06],
+        [60, 0.1],
+        [150, 0.22],
+        [230, 0.3],
+        [270, 0.16],
+        [300, 0.05]
+      ]
+    }
+  ],
+  "modifiers": { "patienceMul": 1.0, "tipMul": 1.0, "toleranceMul": 1.0 }
+}

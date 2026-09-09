@@ -14,6 +14,9 @@ import {
   liquidMl,
 } from '../sim/liquid/Vessel';
 import { addIce, settleStep, shakeStep } from '../sim/liquid/Mixing';
+import { Clock } from './Clock';
+import { customerAtSeat, endNight, serveDrink, stepNight } from './Night';
+import type { NightState, SeatedCustomer } from './Night';
 import type { Input } from './Input';
 import type { World, WorldItem } from './World';
 import {
@@ -37,12 +40,18 @@ export type GameEvent =
   | { type: 'jiggerStop'; x: number; y: number }
   | { type: 'pickup' }
   | { type: 'putdown' }
-  | { type: 'rejected'; x: number; y: number };
+  | { type: 'rejected'; x: number; y: number }
+  | { type: 'served'; verdict: string; seat: number; x: number; y: number }
+  | { type: 'nightOver' };
 
 export class Game {
   readonly world: World;
   /** Drained each frame by main.ts. One-shot feedback, not state. */
   readonly events: GameEvent[] = [];
+
+  readonly clock = new Clock();
+  /** Null until a night is started, so Phase 1 sandbox play still works. */
+  night: NightState | null = null;
 
   private readonly input: Input;
   private accumulator = 0;
@@ -87,6 +96,7 @@ export class Game {
     this.handleShake(dtMs);
     this.handleRim(dtMs);
     this.handlePour(dtMs);
+    this.advanceNight(dtMs);
     this.settleDrinks(dtMs);
     this.fadePuddles(dtMs);
   }
@@ -96,15 +106,36 @@ export class Game {
   private updateHoveredStation(): void {
     const held = heldItem(this.world);
     const under = this.itemUnder(this.input.pointer.x, this.input.pointer.y);
-    const isStation = under?.kind === 'station';
+    this.world.hoveredTargetId = under && this.canUse(under, held) ? under.id : null;
+  }
+
+  /** Whether tapping `target` while carrying `held` would actually do anything. */
+  private canUse(target: WorldItem, held: WorldItem | null): boolean {
+    if (target.kind === 'seat') {
+      // Only worth highlighting if there is someone there wanting a drink and
+      // you are carrying something to give them.
+      if (!held || liquidMl(held.vessel) <= 0) return false;
+      const customer = this.customerAt(target);
+      return customer !== null && customer.phase !== 'leaving';
+    }
+    if (target.kind !== 'station') return false;
     // The book is the one station you use empty-handed.
-    const usable = isStation && (under.station === 'book' ? held === null : held !== null);
-    this.world.hoveredStationId = usable ? under.id : null;
+    return target.station === 'book' ? held === null : held !== null;
+  }
+
+  private customerAt(seat: WorldItem): SeatedCustomer | null {
+    if (seat.seatIndex === undefined || !this.night) return null;
+    return customerAtSeat(this.night, seat.seatIndex);
   }
 
   private useStation(station: WorldItem): void {
     const world = this.world;
     const held = heldItem(world);
+
+    if (station.kind === 'seat') {
+      this.serve(station);
+      return;
+    }
 
     if (station.station === 'book') {
       world.bookOpen = !world.bookOpen;
@@ -144,10 +175,39 @@ export class Game {
     }
   }
 
+  /**
+   * Hand the drink over (§3: serving is dragging a glass to a seat's spot).
+   * The glass empties whatever they think of it — a sent-back drink is gone.
+   */
+  private serve(seat: WorldItem): void {
+    const held = heldItem(this.world);
+    const customer = this.customerAt(seat);
+    if (!held || !customer || !this.night) return;
+
+    const outcome = serveDrink(
+      this.night,
+      customer,
+      held.vessel,
+      held.drinkSpillMl,
+      held.buildTimeSec,
+    );
+    if (!outcome) return;
+
+    held.drinkSpillMl = 0;
+    held.buildTimeSec = 0;
+    this.events.push({
+      type: 'served',
+      verdict: outcome.reaction.verdict,
+      seat: seat.seatIndex ?? 0,
+      x: seat.x,
+      y: seat.y - 40,
+    });
+  }
+
   /** §6: drag the glass onto the salt plate and press. */
   private handleRim(dtMs: number): void {
     const world = this.world;
-    const station = itemById(world, world.hoveredStationId);
+    const station = itemById(world, world.hoveredTargetId);
     const held = heldItem(world);
     const p = this.input.pointer;
 
@@ -195,7 +255,7 @@ export class Game {
     // A short press while holding something: use the station under it, or put
     // it down. A long press pours, shakes, or rims.
     if (p.released && world.heldId !== null && !this.pressConsumed) {
-      const station = itemById(world, world.hoveredStationId);
+      const station = itemById(world, world.hoveredTargetId);
       if (station && station.station !== 'salt') {
         this.useStation(station);
       } else if (!station && p.lastPressMs <= FEEL.TAP_MS) {
@@ -259,7 +319,7 @@ export class Game {
     const p = this.input.pointer;
 
     const busyElsewhere =
-      world.shakeIntensity > SHAKE.SUPPRESS_POUR_ABOVE || world.hoveredStationId !== null;
+      world.shakeIntensity > SHAKE.SUPPRESS_POUR_ABOVE || world.hoveredTargetId !== null;
 
     const wantsToPour =
       item !== null &&
@@ -360,6 +420,22 @@ export class Game {
       spilledMl: fill.rejectedMl,
       pouredMl: out.pouredMl,
     };
+  }
+
+  private advanceNight(dtMs: number): void {
+    if (!this.night || this.night.over) return;
+    const minutes = this.clock.advance(dtMs);
+    stepNight(this.night, minutes);
+    if (this.clock.isOver) {
+      endNight(this.night);
+      this.events.push({ type: 'nightOver' });
+    }
+  }
+
+  /** Start a night. Phase 1 sandbox play is just never calling this. */
+  startNight(night: NightState): void {
+    this.night = night;
+    this.clock.reset();
   }
 
   private settleDrinks(dtMs: number): void {

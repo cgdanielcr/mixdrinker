@@ -9,14 +9,18 @@ Per-session brief: **[CLAUDE.md](CLAUDE.md)**. Tuning history: **[DEVLOG.md](DEV
 
 ## Status
 
-**Phase 1 — drink prototype.** Pouring and mixing have to feel good before
-anything else gets built. No customers, dialogue or scoring UI yet.
+**Phase 2 — customers.** The full loop runs: customers arrive on a seeded
+schedule, sit, order, lose patience, and react to what you hand them.
 
-Working now: the whole Margarita, start to finish. Pick up and put down, free-pour
-with a tilt ramp, measure with a jigger that stops on its marks, add ice, shake,
-strain, salt a rim, garnish, and dump it in the sink. Liquid renders as
-density-sorted layers with a stream, splash, spills and overflow. The recipe book
-opens on the bar and the game keeps running behind it.
+Working now: free-pour or measure with a jigger, ice, shake, strain, salt a
+rim, garnish, sink, and the recipe book. Then serve it — carry the glass to a
+seat and hand it over. Drinks are scored by the liquid and judged by the
+person: a demanding customer sends back a 72 that a drunk one thanks you for.
+Tips, intoxication, walkouts, a night clock, and an end-of-night summary
+listing every event and the seed.
+
+Not yet: reputation and the run loop (Phase 3), dialogue (Phase 4), named
+regulars and incidents (Phase 5).
 
 ## Running it
 
@@ -30,7 +34,11 @@ npm run dev
 Click a bottle, glass, shaker or jigger to pick it up. Tap to put it down, or press
 and hold over a vessel to pour. Carry a vessel to a station and tap for ice, lime or
 the sink; hold on the salt plate to rim it. Hold the shaker and move fast to shake.
+Carry a finished drink to a seat and tap to hand it over.
 `R` opens the recipe book, `M` mutes, `D` hides the debug panel.
+
+Add `?seed=1234` to the URL to replay a specific night. The seed is printed on
+the end-of-night summary.
 
 ```bash
 npm test     # vitest — the sim layer

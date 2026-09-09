@@ -3,9 +3,16 @@ import tseslint from 'typescript-eslint';
 import prettier from 'eslint-config-prettier';
 
 export default tseslint.config(
-  { ignores: ['dist/**', 'coverage/**', 'node_modules/**'] },
+  { ignores: ['dist/**', 'dist-single/**', 'coverage/**', 'node_modules/**'] },
 
   js.configs.recommended,
+
+  // Build scripts run in Node, not the browser.
+  {
+    files: ['scripts/**/*.mjs'],
+    languageOptions: { globals: { console: 'readonly', process: 'readonly' } },
+  },
+
   ...tseslint.configs.recommended,
   prettier,
 

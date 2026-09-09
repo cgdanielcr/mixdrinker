@@ -5,6 +5,70 @@ Format per session: what was tried, what felt good, what didn't, numbers that ch
 
 ---
 
+## 2026-09-09 — Session 3: Phase 2, customers and the night
+
+Seeded arrivals, seats, order bubbles, patience, serve-by-drag, reactions,
+intoxication, tips, a night clock and an end-of-night summary. The drink model
+finally has a reason to exist.
+
+**The loop closes.** Made a Margarita, carried it to a waiting customer, handed
+it over: _"Perfect. Thank you." 97/100, 6 tip_ — patience restored 0.52 → 1,
+phase → drinking, BAC 0.0298. Served them cola instead and it came back: no
+tip, `wrong_drink` + `sent_back` flags, patience penalty, still waiting.
+
+### Shape of it
+
+- **Rng.ts** (mulberry32) now exists and the ESLint ban on `Math.random` in
+  `src/sim` finally has something to point at. Streams are forked per system so
+  adding a system later cannot shift who walks in the door.
+- **NightGenerator** walks the night a minute at a time accumulating expected
+  arrivals off the bar's pacing curve. Deterministic from
+  `(seed, barId, night)`; `?seed=4242` in the URL replays a night exactly, and
+  the summary prints the seed (§12, shareable for free).
+- **Reactions.ts** is where §5 insists it must be — outside `Evaluate`. The
+  same 72 is `poor` to a snob and `fine` to easy company; a customer at the
+  cut-off line forgives about 26 points.
+- **Serving reuses the station gesture** from session 2: carry the glass to the
+  seat's spot and tap. One rule for ice, salt, lime, sink and customers.
+
+### Two bugs worth recording
+
+1. **`[hidden]` did nothing.** `.night-summary { display: flex }` outranks the
+   `hidden` attribute, so the end-of-night overlay sat on top of the entire
+   night, invisible-but-covering. Added a global
+   `[hidden] { display: none !important }`. This would have hit every future
+   overlay — worth knowing before Phase 4 puts dialogue on screen.
+2. **Seats ran off under the debug panel.** The third seat sat at x=1550, which
+   the panel covers at common window sizes. Span pulled 1180 → 1000.
+
+### Numbers set this session, all first guesses
+
+`NIGHT.REAL_SECONDS 540` (21:00→02:00 in 9 real minutes, so 1 real second ≈ 33
+game seconds) · `PATIENCE.WAIT_MINUTES 14` · `INTOX.CUT_OFF 0.14` ·
+`REACTION.LOVED 85 / FINE 62 / POOR 40` · `TIPS.BASE 3`.
+
+An unattended night on seed 4242 draws **52 arrivals** and ends 41 walkouts, 10
+turned away. Playing it properly (serving correct drinks on sight) gives 43
+served, 291 tips, 4 walkouts. So the ceiling and the floor are far apart, which
+is what we want — but **whether the middle is playable is exactly the thing I
+cannot test.** Three seats and a 14-minute patience window is a guess.
+
+### Deliberately not built
+
+Reputation, the run, the shop, the water and cut-off verbs — all Phase 3 per
+§8. Named regulars and Ink are Phase 4. The summary is the placeholder §8 asks
+for: every event flag, timestamped, plus the seed.
+
+### Order bubbles are Pixi, not DOM
+
+§4 sketches `ui/Bubbles.ts` as part of the DOM overlay. These are one or two
+words pinned to a figure that sways, moves and leaves, so they live in the
+scene graph instead — no syncing DOM positions to the letterboxed stage
+transform every frame. Phase 4's timed dialogue choices are a different problem
+and can still be DOM.
+
+---
+
 ## 2026-09-09 — Session 2: the rest of the Phase 1 verbs
 
 Ice, shake, strain, jigger, salt rim, garnish, sink and the recipe book. The

@@ -5,9 +5,11 @@
 import { Container, Graphics, Text, TextStyle } from 'pixi.js';
 import { LAYOUT, SHAKE } from '../tuning';
 import type { World } from '../core/World';
+import type { NightState } from '../core/Night';
 import { ItemView } from './ItemSprites';
 import { LiquidRenderer } from './LiquidRenderer';
 import { Hand } from './Hand';
+import { CustomerLayer } from './CustomerSprites';
 import { damp } from './Juice';
 
 const CUSTOMER_BG = 0x141a20;
@@ -23,6 +25,7 @@ export class BarScene {
   private readonly views = new Map<string, ItemView>();
   private readonly liquids = new LiquidRenderer();
   private readonly hand = new Hand();
+  private readonly customers = new CustomerLayer();
   private shakeAmount = 0;
   private shakePhase = 0;
 
@@ -37,7 +40,13 @@ export class BarScene {
       this.items.addChild(view.container);
     }
 
-    this.shaken.addChild(bands, this.liquids.container, this.items, this.hand.view);
+    this.shaken.addChild(
+      bands,
+      this.customers.container,
+      this.liquids.container,
+      this.items,
+      this.hand.view,
+    );
     this.shaken.addChild(this.bandLabels());
     this.stage.addChild(this.shaken);
   }
@@ -82,10 +91,11 @@ export class BarScene {
     return box;
   }
 
-  update(world: World, dtSec: number): void {
+  update(world: World, night: NightState | null, dtSec: number): void {
     for (const item of world.items) {
       this.views.get(item.id)?.update(world, dtSec);
     }
+    this.customers.update(world, night, dtSec);
     this.liquids.update(world, dtSec);
     this.hand.update(world, dtSec);
 

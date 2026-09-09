@@ -94,3 +94,101 @@ export interface VesselDef {
   glassType?: GlassType;
   capacityMl: number;
 }
+
+// ---------------------------------------------------------------- customers
+
+export interface Personality {
+  /** Multiplier on how long they will wait. */
+  patience: number;
+  /** 0..1 — how harshly they mark a drink. */
+  demanding: number;
+  /** 0..1 — reserved for Phase 4 dialogue. */
+  talkative: number;
+  /** Multiplier on how well they hold their drink. */
+  tolerance: number;
+}
+
+export interface CustomerDef {
+  id: string;
+  name: string;
+  archetype: boolean;
+  personality: Personality;
+}
+
+export interface Order {
+  recipeId: string;
+  /** e.g. ["no_salt"] — Phase 3. */
+  special?: string[];
+}
+
+export type CustomerPhase = 'arriving' | 'ordering' | 'waiting' | 'drinking' | 'leaving';
+
+export interface Customer {
+  id: string;
+  defId: string;
+  name: string;
+  seat: number | null;
+  personality: Personality;
+  order: Order | null;
+  /** 0..1, drains over time, refilled by good service. */
+  patience: number;
+  /** Rises with abv*ml, decays over time. */
+  bac: number;
+  /** -1..1 */
+  mood: number;
+  drinksHad: number;
+  phase: CustomerPhase;
+  /** Game minute they sat down, and when the current order was placed. */
+  arrivedAtMinute: number;
+  orderedAtMinute: number;
+  storyState: Record<string, unknown>;
+  flags: Set<string>;
+}
+
+export type Verdict = 'loved' | 'fine' | 'poor' | 'rejected';
+
+export interface Reaction {
+  verdict: Verdict;
+  /** What the customer says, briefly. */
+  line: string;
+  tip: number;
+  patienceDelta: number;
+  moodDelta: number;
+  flags: string[];
+  /** The score after this customer's own adjustment, for the debug panel. */
+  adjustedScore: number;
+}
+
+export interface Bar {
+  id: string;
+  name: string;
+  menu: string[];
+  shelf: string[];
+  seats: number;
+  clientele: { customerId: string; weight: number }[];
+  pacing: { night: number; curve: [number, number][] }[];
+  modifiers: Record<string, number>;
+  unlockedBy?: string;
+}
+
+/** One planned arrival, decided up front by the seeded generator. */
+export interface PlannedArrival {
+  /** Game minute they walk in. */
+  atMinute: number;
+  defId: string;
+  recipeId: string;
+}
+
+export interface NightPlan {
+  seed: number;
+  barId: string;
+  night: number;
+  arrivals: PlannedArrival[];
+}
+
+/** Anything worth reporting at the end of the night (§8). */
+export interface NightEvent {
+  minute: number;
+  kind: string;
+  text: string;
+}
