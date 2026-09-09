@@ -1,0 +1,14 @@
+{
+  "id": "martini",
+  "name": "Martini",
+  "glass": "coupe",
+  "ingredients": [
+    { "id": "gin", "ml": 60, "toleranceMl": 8 },
+    { "id": "dry_vermouth", "ml": 10, "toleranceMl": 4 }
+  ],
+  "method": "stir",
+  "ice": "none",
+  "garnish": [],
+  "serveWithIce": false,
+  "weights": { "ingredients": 5, "method": 3, "glass": 2, "ice": 2 }
+}

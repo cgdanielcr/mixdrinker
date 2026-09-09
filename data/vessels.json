@@ -1,0 +1,10 @@
+{
+  "rocks": { "kind": "glass", "glassType": "rocks", "capacityMl": 300, "name": "Rocks Glass" },
+  "coupe": { "kind": "glass", "glassType": "coupe", "capacityMl": 180, "name": "Coupe" },
+  "highball": { "kind": "glass", "glassType": "highball", "capacityMl": 350, "name": "Highball" },
+  "shot": { "kind": "glass", "glassType": "shot", "capacityMl": 60, "name": "Shot Glass" },
+  "shaker": { "kind": "shaker", "capacityMl": 550, "name": "Shaker" },
+  "mixing_glass": { "kind": "mixing_glass", "capacityMl": 500, "name": "Mixing Glass" },
+  "jigger": { "kind": "jigger", "capacityMl": 60, "name": "Jigger" },
+  "bottle": { "kind": "bottle", "capacityMl": 700, "name": "Bottle" }
+}

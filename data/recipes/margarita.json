@@ -1,0 +1,16 @@
+{
+  "id": "margarita",
+  "name": "Margarita",
+  "glass": "rocks",
+  "ingredients": [
+    { "id": "tequila_blanco", "ml": 50, "toleranceMl": 8 },
+    { "id": "triple_sec", "ml": 25, "toleranceMl": 5 },
+    { "id": "lime_juice", "ml": 25, "toleranceMl": 5 }
+  ],
+  "method": "shake",
+  "ice": "cubes",
+  "rim": "salt",
+  "garnish": ["lime_wedge"],
+  "serveWithIce": true,
+  "weights": { "ingredients": 6, "method": 2, "glass": 1, "rim": 2, "garnish": 1, "ice": 1 }
+}

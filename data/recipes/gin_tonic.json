@@ -1,0 +1,14 @@
+{
+  "id": "gin_tonic",
+  "name": "Gin & Tonic",
+  "glass": "highball",
+  "ingredients": [
+    { "id": "gin", "ml": 50, "toleranceMl": 8 },
+    { "id": "soda", "ml": 150, "toleranceMl": 30 }
+  ],
+  "method": "build",
+  "ice": "cubes",
+  "garnish": ["lime_wedge"],
+  "serveWithIce": true,
+  "weights": { "ingredients": 5, "method": 2, "glass": 2, "garnish": 1, "ice": 2 }
+}

@@ -1,0 +1,92 @@
+{
+  "tequila_blanco": {
+    "id": "tequila_blanco",
+    "name": "Tequila Blanco",
+    "color": "#f3f0e2",
+    "opacity": 0.18,
+    "abv": 0.4,
+    "density": 0.94,
+    "category": "spirit"
+  },
+  "triple_sec": {
+    "id": "triple_sec",
+    "name": "Triple Sec",
+    "color": "#f6efd4",
+    "opacity": 0.22,
+    "abv": 0.3,
+    "density": 1.04,
+    "category": "liqueur"
+  },
+  "lime_juice": {
+    "id": "lime_juice",
+    "name": "Lime Juice",
+    "color": "#c6d96b",
+    "opacity": 0.72,
+    "abv": 0,
+    "density": 1.03,
+    "category": "juice"
+  },
+  "simple_syrup": {
+    "id": "simple_syrup",
+    "name": "Simple Syrup",
+    "color": "#efe6c8",
+    "opacity": 0.35,
+    "abv": 0,
+    "density": 1.15,
+    "category": "syrup"
+  },
+  "gin": {
+    "id": "gin",
+    "name": "Gin",
+    "color": "#f1f4f1",
+    "opacity": 0.16,
+    "abv": 0.4,
+    "density": 0.94,
+    "category": "spirit"
+  },
+  "dry_vermouth": {
+    "id": "dry_vermouth",
+    "name": "Dry Vermouth",
+    "color": "#e6dcaa",
+    "opacity": 0.3,
+    "abv": 0.18,
+    "density": 1.0,
+    "category": "other"
+  },
+  "soda": {
+    "id": "soda",
+    "name": "Soda",
+    "color": "#e9f3f7",
+    "opacity": 0.12,
+    "abv": 0,
+    "density": 1.0,
+    "category": "mixer"
+  },
+  "cola": {
+    "id": "cola",
+    "name": "Cola",
+    "color": "#3a1f0c",
+    "opacity": 0.94,
+    "abv": 0,
+    "density": 1.04,
+    "category": "mixer"
+  },
+  "orange_juice": {
+    "id": "orange_juice",
+    "name": "Orange Juice",
+    "color": "#f2a01c",
+    "opacity": 0.88,
+    "abv": 0,
+    "density": 1.05,
+    "category": "juice"
+  },
+  "grenadine": {
+    "id": "grenadine",
+    "name": "Grenadine",
+    "color": "#ae0f28",
+    "opacity": 0.92,
+    "abv": 0,
+    "density": 1.18,
+    "category": "syrup"
+  }
+}

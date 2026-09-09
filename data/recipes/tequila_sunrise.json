@@ -1,0 +1,16 @@
+{
+  "id": "tequila_sunrise",
+  "name": "Tequila Sunrise",
+  "glass": "highball",
+  "ingredients": [
+    { "id": "tequila_blanco", "ml": 45, "toleranceMl": 8 },
+    { "id": "orange_juice", "ml": 90, "toleranceMl": 20 },
+    { "id": "grenadine", "ml": 15, "toleranceMl": 5 }
+  ],
+  "method": "build",
+  "ice": "cubes",
+  "garnish": [],
+  "serveWithIce": true,
+  "unmixed": true,
+  "weights": { "ingredients": 5, "method": 3, "glass": 2, "ice": 1 }
+}
