@@ -254,10 +254,14 @@ export class ItemView {
       },
     );
 
-    // The salt plate is a hold, so it shows how far along the rim is.
-    if (item.station === 'salt' && world.rimProgress > 0) {
-      const w = item.width * world.rimProgress;
-      g.roundRect(-item.width / 2, -item.height - 16, w, 6, 3).fill({ color: HIGHLIGHT });
+    // Both holds show their progress: salting a rim, and refusing service.
+    const progress =
+      item.station === 'salt' ? world.rimProgress : item.kind === 'seat' ? world.cutOffProgress : 0;
+    if (progress > 0) {
+      g.roundRect(-item.width / 2, -item.height - 16, item.width * progress, 6, 3).fill({
+        // Refusing someone is not a friendly action; it should not look like one.
+        color: item.kind === 'seat' ? 0xd8574b : HIGHLIGHT,
+      });
     }
   }
 

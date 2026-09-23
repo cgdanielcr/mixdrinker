@@ -9,18 +9,18 @@ Per-session brief: **[CLAUDE.md](CLAUDE.md)**. Tuning history: **[DEVLOG.md](DEV
 
 ## Status
 
-**Phase 2 — customers.** The full loop runs: customers arrive on a seeded
-schedule, sit, order, lose patience, and react to what you hand them.
+**Phase 3 — pressure and the run.** A week at one bar: five nights, reputation
+as HP, fired at zero.
 
-Working now: free-pour or measure with a jigger, ice, shake, strain, salt a
-rim, garnish, sink, and the recipe book. Then serve it — carry the glass to a
-seat and hand it over. Drinks are scored by the liquid and judged by the
-person: a demanding customer sends back a 72 that a drunk one thanks you for.
-Tips, intoxication, walkouts, a night clock, and an end-of-night summary
-listing every event and the seed.
+Working now: build a drink by hand (free-pour or jigger, ice, shake or stir,
+strain, salt a rim, garnish, sink), then serve it to one of five seats before
+they walk out. Customers order second rounds, ask for it without salt or as a
+double, and get visibly drunk — refuse them in time and it pays; serve them
+anyway and it costs. Between nights, tips buy stock and new recipes. Bottles
+run dry. The week is saved to localStorage and reproducible from its seed.
 
-Not yet: reputation and the run loop (Phase 3), dialogue (Phase 4), named
-regulars and incidents (Phase 5).
+Not yet: dialogue and named regulars (Phase 4), incidents, a second bar and
+meta-unlocks (Phase 5).
 
 ## Running it
 
@@ -34,11 +34,12 @@ npm run dev
 Click a bottle, glass, shaker or jigger to pick it up. Tap to put it down, or press
 and hold over a vessel to pour. Carry a vessel to a station and tap for ice, lime or
 the sink; hold on the salt plate to rim it. Hold the shaker and move fast to shake.
-Carry a finished drink to a seat and tap to hand it over.
+Carry a finished drink to a seat and tap to hand it over. Hold on an occupied
+seat with empty hands to refuse someone service.
 `R` opens the recipe book, `M` mutes, `D` hides the debug panel.
 
-Add `?seed=1234` to the URL to replay a specific night. The seed is printed on
-the end-of-night summary.
+Add `?seed=1234` to the URL to start a week on that seed, or type one on the
+title screen. The seed is printed on every summary.
 
 ```bash
 npm test     # vitest — the sim layer

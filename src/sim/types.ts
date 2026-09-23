@@ -163,6 +163,8 @@ export interface Bar {
   id: string;
   name: string;
   menu: string[];
+  /** Recipes the shop can sell during a run (§12). */
+  lockedMenu?: string[];
   shelf: string[];
   seats: number;
   clientele: { customerId: string; weight: number }[];
@@ -177,6 +179,7 @@ export interface PlannedArrival {
   atMinute: number;
   defId: string;
   recipeId: string;
+  specials?: string[];
 }
 
 export interface NightPlan {

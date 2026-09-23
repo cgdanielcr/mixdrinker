@@ -13,9 +13,9 @@ import {
   isEmpty,
   liquidMl,
 } from '../sim/liquid/Vessel';
-import { addIce, settleStep, shakeStep } from '../sim/liquid/Mixing';
+import { addIce, settleStep, shakeStep, stirStep } from '../sim/liquid/Mixing';
 import { Clock } from './Clock';
-import { customerAtSeat, endNight, serveDrink, stepNight } from './Night';
+import { cutOff, customerAtSeat, endNight, serveDrink, stepNight } from './Night';
 import type { NightState, SeatedCustomer } from './Night';
 import type { Input } from './Input';
 import type { World, WorldItem } from './World';
@@ -42,6 +42,7 @@ export type GameEvent =
   | { type: 'putdown' }
   | { type: 'rejected'; x: number; y: number }
   | { type: 'served'; verdict: string; seat: number; x: number; y: number }
+  | { type: 'cutOff'; justified: boolean; x: number; y: number }
   | { type: 'nightOver' };
 
 export class Game {
@@ -95,6 +96,7 @@ export class Game {
     this.moveHeldItem(dtMs);
     this.handleShake(dtMs);
     this.handleRim(dtMs);
+    this.handleCutOff(dtMs);
     this.handlePour(dtMs);
     this.advanceNight(dtMs);
     this.settleDrinks(dtMs);
@@ -112,11 +114,11 @@ export class Game {
   /** Whether tapping `target` while carrying `held` would actually do anything. */
   private canUse(target: WorldItem, held: WorldItem | null): boolean {
     if (target.kind === 'seat') {
-      // Only worth highlighting if there is someone there wanting a drink and
-      // you are carrying something to give them.
-      if (!held || liquidMl(held.vessel) <= 0) return false;
       const customer = this.customerAt(target);
-      return customer !== null && customer.phase !== 'leaving';
+      if (!customer || customer.phase === 'leaving') return false;
+      // Carrying a drink, you can serve it. Empty-handed, you can refuse them
+      // service — so an occupied seat is worth highlighting either way.
+      return held === null || liquidMl(held.vessel) > 0;
     }
     if (target.kind !== 'station') return false;
     // The book is the one station you use empty-handed.
@@ -300,15 +302,61 @@ export class Game {
     const item = heldItem(world);
     const p = this.input.pointer;
 
-    if (!item || item.kind !== 'shaker' || !p.down || this.pressConsumed) {
+    const agitatable = item && (item.kind === 'shaker' || item.kind === 'mixing_glass');
+    if (!item || !agitatable || !p.down || this.pressConsumed) {
       world.shakeIntensity = 0;
+      world.stirring = false;
       return;
     }
 
     const span = SHAKE.FULL_SPEED - SHAKE.MIN_SPEED;
     const intensity = Math.max(0, Math.min(1, (p.speed - SHAKE.MIN_SPEED) / span));
     world.shakeIntensity = intensity;
-    if (intensity > 0) shakeStep(item.vessel, intensity, dtMs);
+    // Same gesture, different vessel: the tin gets shaken, the mixing glass
+    // gets stirred. Which one you reached for is the decision (§8, Phase 3).
+    world.stirring = item.kind === 'mixing_glass';
+    if (intensity > 0) {
+      if (world.stirring) stirStep(item.vessel, intensity, dtMs);
+      else shakeStep(item.vessel, intensity, dtMs);
+    }
+  }
+
+  /**
+   * Refusing service (§8, Phase 3). A hold, not a tap, on an occupied seat with
+   * empty hands — ejecting a customer must never be something you do by
+   * brushing past.
+   */
+  private handleCutOff(dtMs: number): void {
+    const world = this.world;
+    const seat = itemById(world, world.hoveredTargetId);
+    const p = this.input.pointer;
+
+    const eligible =
+      seat?.kind === 'seat' && world.heldId === null && p.down && !this.pressConsumed;
+
+    if (!eligible || !this.night) {
+      world.cutOffProgress = 0;
+      return;
+    }
+
+    const customer = this.customerAt(seat);
+    if (!customer) {
+      world.cutOffProgress = 0;
+      return;
+    }
+
+    world.cutOffProgress = Math.min(1, world.cutOffProgress + dtMs / STATION.RIM_MS);
+    if (world.cutOffProgress >= 1) {
+      const justified = cutOff(this.night, customer);
+      world.cutOffProgress = 0;
+      this.pressConsumed = true;
+      this.events.push({
+        type: 'cutOff',
+        justified,
+        x: seat.x,
+        y: seat.y - 40,
+      });
+    }
   }
 
   // -------------------------------------------------------------------- pour

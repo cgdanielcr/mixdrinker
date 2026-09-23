@@ -1,0 +1,15 @@
+{
+  "id": "gin_rickey",
+  "name": "Gin Rickey",
+  "glass": "rocks",
+  "ingredients": [
+    { "id": "gin", "ml": 50, "toleranceMl": 8 },
+    { "id": "lime_juice", "ml": 25, "toleranceMl": 6 },
+    { "id": "soda", "ml": 90, "toleranceMl": 20 }
+  ],
+  "method": "build",
+  "ice": "cubes",
+  "garnish": ["lime_wedge"],
+  "serveWithIce": true,
+  "weights": { "ingredients": 5, "method": 2, "glass": 2, "garnish": 1, "ice": 2 }
+}

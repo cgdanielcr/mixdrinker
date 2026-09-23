@@ -2,6 +2,7 @@
   "id": "dive",
   "name": "The Long Pour",
   "menu": ["margarita", "gin_tonic", "tequila_sunrise", "martini"],
+  "lockedMenu": ["ranch_water", "gin_rickey"],
   "shelf": [
     "tequila_blanco",
     "triple_sec",
@@ -16,25 +17,91 @@
   ],
   "seats": 3,
   "clientele": [
-    { "customerId": "walkin_regular", "weight": 30 },
-    { "customerId": "walkin_hurried", "weight": 20 },
-    { "customerId": "walkin_easy", "weight": 20 },
-    { "customerId": "walkin_snob", "weight": 12 },
-    { "customerId": "walkin_lightweight", "weight": 10 },
-    { "customerId": "walkin_hardcase", "weight": 8 }
+    {
+      "customerId": "walkin_regular",
+      "weight": 30
+    },
+    {
+      "customerId": "walkin_hurried",
+      "weight": 20
+    },
+    {
+      "customerId": "walkin_easy",
+      "weight": 20
+    },
+    {
+      "customerId": "walkin_snob",
+      "weight": 12
+    },
+    {
+      "customerId": "walkin_lightweight",
+      "weight": 10
+    },
+    {
+      "customerId": "walkin_hardcase",
+      "weight": 8
+    }
   ],
   "pacing": [
     {
       "night": 1,
       "curve": [
-        [0, 0.06],
+        [0, 0.04],
+        [70, 0.08],
+        [160, 0.14],
+        [230, 0.17],
+        [275, 0.09],
+        [300, 0.03]
+      ]
+    },
+    {
+      "night": 2,
+      "curve": [
+        [0, 0.05],
         [60, 0.1],
-        [150, 0.22],
-        [230, 0.3],
+        [150, 0.18],
+        [225, 0.23],
+        [275, 0.12],
+        [300, 0.04]
+      ]
+    },
+    {
+      "night": 3,
+      "curve": [
+        [0, 0.06],
+        [50, 0.13],
+        [130, 0.24],
+        [210, 0.31],
         [270, 0.16],
         [300, 0.05]
       ]
+    },
+    {
+      "night": 4,
+      "curve": [
+        [0, 0.08],
+        [45, 0.16],
+        [120, 0.3],
+        [200, 0.38],
+        [265, 0.2],
+        [300, 0.06]
+      ]
+    },
+    {
+      "night": 5,
+      "curve": [
+        [0, 0.1],
+        [40, 0.2],
+        [110, 0.36],
+        [190, 0.46],
+        [260, 0.26],
+        [300, 0.08]
+      ]
     }
   ],
-  "modifiers": { "patienceMul": 1.0, "tipMul": 1.0, "toleranceMul": 1.0 }
+  "modifiers": {
+    "patienceMul": 1,
+    "tipMul": 1,
+    "toleranceMul": 1
+  }
 }

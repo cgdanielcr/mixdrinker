@@ -133,8 +133,13 @@ export const NIGHT = {
   CLOSE_MINUTE: 26 * 60,
   /** §1: a night is 8-10 real minutes. 300 game minutes fit into 9 of them. */
   REAL_SECONDS: 540,
-  /** Seats on the counter. §3: 3 in Phase 2, up to 5 later. */
-  SEATS: 3,
+  /**
+   * Seats on the counter (§3 allows up to 5). Five, not three: with three,
+   * a busier night just turns more people away instead of putting more
+   * pressure on the player, because the seats are the bottleneck rather than
+   * the hands.
+   */
+  SEATS: 5,
 } as const;
 
 export const PATIENCE = {
@@ -190,6 +195,71 @@ export const TIPS = {
   MOOD_SWING: 1.4,
   /** Nobody tips for a drink they sent back. */
   REJECTED: 0,
+} as const;
+
+export const RUN = {
+  /** §12: one week at one bar. */
+  NIGHTS: 5,
+  /** Reputation is the bar's HP. Hit zero and you are fired. */
+  START_REPUTATION: 100,
+  MAX_REPUTATION: 100,
+  /** A bottle holds this much at the start of a night, stock permitting. */
+  BOTTLE_ML: 700,
+} as const;
+
+/**
+ * Reputation deltas (§12). Drains from walkouts, sent-back drinks and serving
+ * someone who should have been cut off; recovers from excellent drinks to
+ * demanding customers and from cutting someone off in time.
+ *
+ * Every number here is a guess until a person plays five nights. The target
+ * §12 sets is a competent player finishing the week around 40-60.
+ */
+export const REP = {
+  WALKOUT: -1.3,
+  SENT_BACK: -1.8,
+  SERVED_WHILE_CUT_OFF: -7,
+  /** Closing time with someone still waiting on a drink. */
+  NEVER_SERVED: -1.5,
+  LEFT_HAPPY: 0.05,
+  /**
+   * §12 is specific: reputation recovers from excellent drinks *to demanding
+   * customers*. A flat reward per drink made a fast night unloseable, so the
+   * flat part is tiny and the bonus does the work.
+   */
+  LOVED: 0.08,
+  LOVED_DEMANDING_BONUS: 0.55,
+  /** Refusing to serve someone who is over the line. */
+  GOOD_CUT_OFF: 2.5,
+  /** Refusing someone who was fine. They do not take it well. */
+  BAD_CUT_OFF: -1.5,
+  /** The bar was full and someone walked back out. Not really your fault. */
+  TURNED_AWAY: -0.12,
+} as const;
+
+export const SHOP = {
+  /** Tips per 100ml of spirit restocked. */
+  RESTOCK_PER_100ML: 1,
+  /** Buying a recipe off the locked list adds it to the menu for the run. */
+  RECIPE_COST: 45,
+  /** Refilling the garnish tray and salt. */
+  SUPPLIES_COST: 12,
+} as const;
+
+export const SPECIALS = {
+  /** "make it a double" multiplies the spirits, not the mixers. */
+  DOUBLE_MULTIPLIER: 2,
+  /** How often the generator asks for something out of the ordinary. */
+  CHANCE_BY_NIGHT: [0, 0.06, 0.12, 0.18, 0.24],
+} as const;
+
+export const STIR = {
+  /** Stirring is gentler than shaking: slower to mix, far less dilution. */
+  MIX_PER_SEC: 0.45,
+  DILUTION_ML_PER_SEC: 1.1,
+  CHILL_C_PER_SEC: 4,
+  /** A stirred drink is properly stirred at this `mixed`. */
+  TARGET_MIXED: 0.7,
 } as const;
 
 export const LAYOUT = {

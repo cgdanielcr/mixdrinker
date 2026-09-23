@@ -5,6 +5,88 @@ Format per session: what was tried, what felt good, what didn't, numbers that ch
 
 ---
 
+## 2026-09-09 — Session 4: Phase 3, pressure and the run
+
+Five nights at one bar, reputation as HP, a cellar that runs dry, a shop
+between nights, special requests, the cut-off verb and stir as a real
+technique. The week now has a beginning, a middle and a firing.
+
+### The tuning goal, measured
+
+§12 asks for "a competent player finishes the week around 40-60 reputation on
+the first bar". I built a headless player-simulator (skill 0..1 on pour
+accuracy, plus seconds-per-drink) and tuned against it across three seeds:
+
+| player        | seconds/drink | week outcome           | final reputation |
+| ------------- | ------------- | ---------------------- | ---------------- |
+| expert        | 12            | finishes ×3            | 85, 87, 86       |
+| **competent** | **16**        | **finishes ×3**        | **44, 44, 48**   |
+| average       | 19            | 1 fired, 2 scrape home | 0, 8, 5          |
+| sloppy        | 25            | fired ×3               | 0, 0, 0          |
+
+A competent week reads +0.8, −10.4, −9.4, −14.9, −19.1 — night 1 is free, and
+it tightens from night 3. **This is a simulated player, not a person.** It
+proves the numbers are internally coherent and that the difficulty curve has
+the right shape; it says nothing about whether it feels good.
+
+### Three seats was the wrong number, and the data said so
+
+The first pass had reputation pinned at 100 all week for a competent player,
+which turned out to be two separate faults.
+
+1. **Volume was the whole game.** A flat reputation reward per loved drink
+   meant a fast night could not be lost. §12 is specific that reputation
+   recovers from excellent drinks _to demanding customers_, so the flat part
+   is now near-zero (0.08) and the demanding bonus does the work (0.55).
+2. **Seats were the bottleneck, not the hands.** With three seats, a busier
+   night did not put more pressure on the player — it just turned more people
+   away (75 of 107 on night 5). Escalation never reached the bar. **Seats went
+   3 → 5** (§3 allows up to five) and the pacing curves were rebuilt around
+   what five seats can actually turn over: 32 arrivals on night 1 rising to 90
+   on night 5, against a ceiling of roughly 40 served.
+
+That second one is the more important finding: _more arrivals is not more
+pressure unless the player is the constraint._
+
+### What else went in
+
+- **Second rounds.** Finish a drink and, if you are not over the line and not
+  in a bad mood, you order another. The seat does not free up and the order
+  lands while you are already behind — this is where a rush actually bites.
+- **Special requests** — "no salt", "make it a double", "no ice", "extra
+  lime". A special produces a _modified recipe_ and goes through the ordinary
+  Evaluate rather than adding cases to the scoring. They scale by night: 0, 5,
+  8, 12, 22 across the week.
+- **Cut off** is a hold on an occupied seat with empty hands, not a tap —
+  ejecting a customer must never happen by brushing past. Right call pays
+  +2.5, wrong call costs −1.5, so it is a judgement.
+- **Stir** shares the shake gesture; the vessel decides the verb. Reaching for
+  the mixing glass instead of the tin _is_ the decision. Stirring mixes slower,
+  dilutes about a quarter as much and chills more gently.
+- **Stock**: bottles fill from a cellar each night and running dry is a real
+  way to lose a night. The shop sells restock, supplies and one of two locked
+  recipes (Ranch Water, Gin Rickey) that join the menu for the rest of the run.
+- **localStorage** persistence for the run and a little meta, defensive on
+  load: anything that does not parse cleanly is discarded rather than
+  half-applied.
+
+### Numbers set this session
+
+`REP.WALKOUT -1.3` · `SENT_BACK -1.8` · `SERVED_WHILE_CUT_OFF -7` ·
+`TURNED_AWAY -0.12` · `LOVED 0.08` + `LOVED_DEMANDING_BONUS 0.55` ·
+`GOOD_CUT_OFF 2.5` · `BAD_CUT_OFF -1.5` · `NIGHT.SEATS 5` ·
+`SHOP.RECIPE_COST 45`.
+
+### Still unverified, and now the gap is the whole point
+
+Everything above is simulated. **Nobody has played a night.** The simulator
+assumes a constant seconds-per-drink; a real player speeds up, panics, forgets
+an order, and reads the room. §8's actual goal — "I have too much going on
+around minute 6 of night 3, and the player still wants night 4" — is a feeling,
+and I have measured everything about it except the feeling.
+
+---
+
 ## 2026-09-09 — Session 3: Phase 2, customers and the night
 
 Seeded arrivals, seats, order bubbles, patience, serve-by-drag, reactions,

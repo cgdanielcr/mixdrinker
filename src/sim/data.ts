@@ -8,6 +8,8 @@ import margarita from '../../data/recipes/margarita.json';
 import ginTonic from '../../data/recipes/gin_tonic.json';
 import tequilaSunrise from '../../data/recipes/tequila_sunrise.json';
 import martini from '../../data/recipes/martini.json';
+import ranchWater from '../../data/recipes/ranch_water.json';
+import ginRickey from '../../data/recipes/gin_rickey.json';
 import archetypesJson from '../../data/customers/archetypes.json';
 import diveBar from '../../data/bars/dive.json';
 
@@ -25,7 +27,10 @@ export const VESSEL_DEFS: Readonly<Record<string, VesselDef>> = vesselsJson as R
 
 export const RECIPES: Readonly<Record<string, Recipe>> = Object.freeze(
   Object.fromEntries(
-    ([margarita, ginTonic, tequilaSunrise, martini] as Recipe[]).map((r) => [r.id, r]),
+    ([margarita, ginTonic, tequilaSunrise, martini, ranchWater, ginRickey] as Recipe[]).map((r) => [
+      r.id,
+      r,
+    ]),
   ),
 );
 
@@ -98,6 +103,11 @@ export function validateData(): void {
     for (const entry of b.clientele) {
       if (!CUSTOMER_DEFS[entry.customerId]) {
         throw new Error(`Bar "${b.id}" lists unknown customer "${entry.customerId}"`);
+      }
+    }
+    for (const recipeId of b.lockedMenu ?? []) {
+      if (!RECIPES[recipeId]) {
+        throw new Error(`Bar "${b.id}" locks unknown recipe "${recipeId}"`);
       }
     }
     if (b.pacing.length === 0) throw new Error(`Bar "${b.id}" has no pacing curve`);

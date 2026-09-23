@@ -8,8 +8,10 @@
  * deterministic from (seed, barId, night) so a night can be replayed from the
  * number printed on the summary.
  */
-import { NIGHT } from '../../tuning';
+import { NIGHT, SPECIALS } from '../../tuning';
 import { createRng } from '../run/Rng';
+import { applicableSpecials } from '../drinks/Specials';
+import { recipe } from '../data';
 import type { Bar, NightPlan, PlannedArrival } from '../types';
 
 /** Arrivals per game minute at `minute` past open, interpolated from the curve. */
@@ -38,12 +40,26 @@ function curveFor(bar: Bar, night: number): readonly [number, number][] {
   return bar.pacing[bar.pacing.length - 1]?.curve ?? [];
 }
 
-export function generateNight(seed: number, bar: Bar, night: number): NightPlan {
+export interface GenerateOptions {
+  /** What the bar can actually make tonight, including anything bought (§12). */
+  menu?: string[];
+}
+
+export function generateNight(
+  seed: number,
+  bar: Bar,
+  night: number,
+  options: GenerateOptions = {},
+): NightPlan {
   // Separate streams, so adding a system later cannot shift who walks in.
   const root = createRng(seed ^ (night * 0x9e3779b1));
   const arrivalRng = root.fork(1);
   const castRng = root.fork(2);
   const orderRng = root.fork(3);
+  const specialRng = root.fork(4);
+  const menu = options.menu && options.menu.length > 0 ? options.menu : bar.menu;
+  // Later nights ask for more awkward things (§8, Phase 3).
+  const specialChance = SPECIALS.CHANCE_BY_NIGHT[night - 1] ?? SPECIALS.CHANCE_BY_NIGHT.at(-1) ?? 0;
 
   const curve = curveFor(bar, night);
   const lengthMinutes = NIGHT.CLOSE_MINUTE - NIGHT.OPEN_MINUTE;
@@ -56,13 +72,19 @@ export function generateNight(seed: number, bar: Bar, night: number): NightPlan 
     pending += arrivalRateAt(curve, minute);
     while (pending >= 1) {
       pending -= 1;
+      const recipeId = orderRng.pick(menu);
+      const options_ = applicableSpecials(recipe(recipeId));
+      const specials =
+        options_.length > 0 && specialRng.chance(specialChance) ? [specialRng.pick(options_)] : [];
+
       arrivals.push({
         // Jitter inside the minute, so arrivals do not land on a metronome.
         atMinute: minute + arrivalRng.next(),
         defId: castRng.weighted(
           bar.clientele.map((entry) => ({ item: entry.customerId, weight: entry.weight })),
         ),
-        recipeId: orderRng.pick(bar.menu),
+        recipeId,
+        ...(specials.length > 0 ? { specials } : {}),
       });
     }
   }

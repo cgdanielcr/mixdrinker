@@ -4,7 +4,7 @@
  * Under-shaken leaves a drink unmixed and warm; over-shaken leaves it
  * over-diluted. Both windows come from tuning.ts so they can be playtested.
  */
-import { ICE, MIXING } from '../../tuning';
+import { ICE, MIXING, STIR } from '../../tuning';
 import type { Vessel } from '../types';
 import { capacityLeftMl } from './Vessel';
 
@@ -25,6 +25,26 @@ export function shakeStep(v: Vessel, intensity: number, dtMs: number): void {
     addDilution(v, MIXING.SHAKE_DILUTION_ML_PER_SEC * i * dt);
     v.ice = Math.max(0, v.ice - ICE.MELT_PER_SEC_SHAKING * i * dt);
     v.chilledC = approach(v.chilledC, MIXING.ICE_TEMP_C, MIXING.SHAKE_CHILL_C_PER_SEC * i * dt);
+  }
+}
+
+/**
+ * One tick of stirring (§8, Phase 3). Gentler than shaking in every respect:
+ * it takes longer to mix, dilutes far less and chills more slowly. That is the
+ * whole reason a Martini is stirred and a Margarita is not.
+ */
+export function stirStep(v: Vessel, intensity: number, dtMs: number): void {
+  const i = clamp01(intensity);
+  if (i <= 0 || dtMs <= 0) return;
+  const dt = dtMs / 1000;
+
+  v.stirred = true;
+  v.mixed = clamp01(v.mixed + STIR.MIX_PER_SEC * i * dt);
+
+  if (v.ice > 0) {
+    addDilution(v, STIR.DILUTION_ML_PER_SEC * i * dt);
+    v.ice = Math.max(0, v.ice - ICE.MELT_PER_SEC_SHAKING * 0.35 * i * dt);
+    v.chilledC = approach(v.chilledC, MIXING.ICE_TEMP_C, STIR.CHILL_C_PER_SEC * i * dt);
   }
 }
 

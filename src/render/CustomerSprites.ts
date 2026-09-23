@@ -13,6 +13,7 @@
 import { Container, Graphics, Text, TextStyle } from 'pixi.js';
 import { INTOX, LAYOUT } from '../tuning';
 import { recipe } from '../sim/data';
+import { describeSpecials } from '../sim/drinks/Specials';
 import { visibleDrunkenness } from '../sim/customers/Intoxication';
 import { isImpatient } from '../sim/customers/Patience';
 import type { NightState, SeatedCustomer } from '../core/Night';
@@ -117,9 +118,16 @@ class CustomerView {
     // Once they have a drink there is nothing to ask for.
     if (!customer.order || customer.phase !== 'waiting') return;
 
-    this.order.text = recipe(customer.order.recipeId).name;
+    // The special is the part you have to actually listen for (§8, Phase 3).
+    const aside = describeSpecials(customer.order.special);
+    this.order.text =
+      recipe(customer.order.recipeId).name +
+      (aside
+        ? `
+${aside}`
+        : '');
     const width = Math.max(120, this.order.width + 34);
-    const height = 46;
+    const height = aside ? 70 : 46;
     const top = -232;
 
     g.roundRect(-width / 2, top, width, height, 10).fill({ color: 0xf2f5f7 });

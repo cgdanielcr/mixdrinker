@@ -1,23 +1,26 @@
 /**
- * End of night (HANDOVER.md §8, Phase 2).
+ * End of night (HANDOVER.md §8, §12).
  *
- * Deliberately a placeholder: it lists every event flag and the seed. Phase 5
- * turns this into "what happened because of what you did and didn't notice";
- * right now its job is to prove the flags and the seed are all there.
+ * What the night cost you and what it earned, then on to the shop. Phase 5
+ * turns the log into "what happened because of what you did and didn't
+ * notice"; the flags and the seed are already all here.
  */
 import { formatMinute } from '../core/Clock';
 import type { NightState } from '../core/Night';
 import { summarise } from '../core/Night';
+import type { NightTotals } from '../sim/night/Summary';
+import { reputationRows } from './Screens';
 
 export class NightSummary {
   readonly root = document.createElement('div');
   private readonly headline = document.createElement('div');
+  private readonly reputation = document.createElement('div');
   private readonly log = document.createElement('ol');
-  private readonly again = document.createElement('button');
+  private readonly onward = document.createElement('button');
   private shownFor: NightState | null = null;
 
-  /** Set by main.ts: start a fresh night. */
-  onReplay: ((sameSeed: boolean) => void) | null = null;
+  /** Set by main.ts: move the run on to the shop or the run summary. */
+  onContinue: (() => void) | null = null;
 
   constructor() {
     this.root.className = 'night-summary';
@@ -27,25 +30,21 @@ export class NightSummary {
     title.textContent = 'LAST CALL';
 
     this.headline.className = 'summary-headline';
+    this.reputation.className = 'rep-rows';
     this.log.className = 'summary-log';
 
-    this.again.className = 'summary-button';
-    this.again.textContent = 'Another night';
-    this.again.addEventListener('click', () => this.onReplay?.(false));
-
-    const replaySame = document.createElement('button');
-    replaySame.className = 'summary-button ghost';
-    replaySame.textContent = 'Replay this seed';
-    replaySame.addEventListener('click', () => this.onReplay?.(true));
+    this.onward.className = 'summary-button';
+    this.onward.textContent = 'Cash up';
+    this.onward.addEventListener('click', () => this.onContinue?.());
 
     const buttons = document.createElement('div');
     buttons.className = 'summary-buttons';
-    buttons.append(this.again, replaySame);
+    buttons.append(this.onward);
 
-    this.root.append(title, this.headline, this.log, buttons);
+    this.root.append(title, this.headline, this.reputation, this.log, buttons);
   }
 
-  update(night: NightState | null): void {
+  update(night: NightState | null, totals: NightTotals | null): void {
     const show = night !== null && night.over;
     this.root.hidden = !show;
     if (!show || !night) {
@@ -59,6 +58,8 @@ export class NightSummary {
     this.headline.innerHTML = summarise(night)
       .map((line) => `<div>${line}</div>`)
       .join('');
+
+    this.reputation.innerHTML = totals ? reputationRows(totals) : '';
 
     this.log.innerHTML = '';
     for (const event of night.events) {

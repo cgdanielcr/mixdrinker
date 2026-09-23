@@ -5,7 +5,7 @@
  * sends back a 72; a friendly drunk one thanks you for it. That lives in
  * Reactions.ts (Phase 2). This module only judges the liquid.
  */
-import { EVAL } from '../../tuning';
+import { EVAL, STIR } from '../../tuning';
 import { RECIPE_LIST, recipe as getRecipe } from '../data';
 import { dilutionRatio } from '../liquid/Mixing';
 import { liquidMl } from '../liquid/Vessel';
@@ -200,7 +200,10 @@ function scoreMethod(v: Vessel, r: Recipe, tags: string[]): number {
         tags.push('not_stirred');
         return 0;
       }
-      return 1;
+      // Stirring, like shaking, can be under-done.
+      const stirRatio = v.mixed / STIR.TARGET_MIXED;
+      if (stirRatio < 1) tags.push('under_stirred');
+      return clamp01(stirRatio);
     }
     case 'build': {
       if (v.shaken) {

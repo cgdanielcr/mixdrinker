@@ -7,7 +7,8 @@ import { LAYOUT, NIGHT, POUR } from '../tuning';
 import { createVessel } from '../sim/liquid/Vessel';
 import type { Vessel } from '../sim/types';
 
-export type ItemKind = 'bottle' | 'glass' | 'shaker' | 'jigger' | 'station' | 'seat';
+export type ItemKind =
+  'bottle' | 'glass' | 'shaker' | 'mixing_glass' | 'jigger' | 'station' | 'seat';
 
 /**
  * Stations act on whatever you are carrying. §6 has you drag ice *to* the
@@ -69,6 +70,10 @@ export interface World {
   hoveredTargetId: string | null;
   /** 0..1 while pressing a glass onto the salt plate. */
   rimProgress: number;
+  /** 0..1 while holding on an occupied seat to refuse service. */
+  cutOffProgress: number;
+  /** The held vessel is a mixing glass being stirred, not a tin being shaken. */
+  stirring: boolean;
   /** 0..1 — how hard the shaker is being worked this tick. */
   shakeIntensity: number;
   /** The jigger just hit a measuring mark and stopped taking liquid. */
@@ -103,12 +108,13 @@ const VESSELS: {
   height: number;
   x: number;
 }[] = [
-  { key: 'rocks', kind: 'glass', label: 'ROCKS', width: 104, height: 116, x: 130 },
-  { key: 'rocks', kind: 'glass', label: 'ROCKS', width: 104, height: 116, x: 268 },
-  { key: 'coupe', kind: 'glass', label: 'COUPE', width: 132, height: 112, x: 424 },
-  { key: 'highball', kind: 'glass', label: 'HIGHBALL', width: 86, height: 178, x: 572 },
-  { key: 'shaker', kind: 'shaker', label: 'SHAKER', width: 96, height: 196, x: 710 },
-  { key: 'jigger', kind: 'jigger', label: 'JIGGER', width: 84, height: 80, x: 846 },
+  { key: 'rocks', kind: 'glass', label: 'ROCKS', width: 100, height: 116, x: 118 },
+  { key: 'rocks', kind: 'glass', label: 'ROCKS', width: 100, height: 116, x: 240 },
+  { key: 'coupe', kind: 'glass', label: 'COUPE', width: 126, height: 112, x: 382 },
+  { key: 'highball', kind: 'glass', label: 'HIGHBALL', width: 84, height: 178, x: 512 },
+  { key: 'shaker', kind: 'shaker', label: 'SHAKER', width: 92, height: 196, x: 634 },
+  { key: 'mixing_glass', kind: 'mixing_glass', label: 'MIXING', width: 104, height: 150, x: 762 },
+  { key: 'jigger', kind: 'jigger', label: 'JIGGER', width: 84, height: 80, x: 884 },
 ];
 
 const STATIONS: {
@@ -173,10 +179,10 @@ export function createWorld(): World {
 
   // Serving spots on the counter, one per seat (§3). The customer stands in
   // the band above; this is the bit of bar you put the glass down on.
-  const seatSpan = 1000;
+  const seatSpan = 1040;
   const seatGap = seatSpan / Math.max(1, NIGHT.SEATS - 1);
   for (let seat = 0; seat < NIGHT.SEATS; seat++) {
-    const x = 420 + seat * seatGap;
+    const x = 380 + seat * seatGap;
     items.push({
       id: `seat_${seat}`,
       kind: 'seat',
@@ -185,7 +191,7 @@ export function createWorld(): World {
       y: COUNTER_SPOT_Y,
       homeX: x,
       homeY: COUNTER_SPOT_Y,
-      width: 150,
+      width: 132,
       height: 26,
       label: `SEAT ${seat + 1}`,
       seatIndex: seat,
@@ -226,6 +232,8 @@ export function createWorld(): World {
     overflowing: false,
     hoveredTargetId: null,
     rimProgress: 0,
+    cutOffProgress: 0,
+    stirring: false,
     shakeIntensity: 0,
     jiggerStopped: false,
     bookOpen: false,
@@ -253,7 +261,12 @@ export function isActionTarget(item: WorldItem): boolean {
 
 /** Anything liquid can land in. Bottles have necks, so they are not targets. */
 export function isPourTarget(item: WorldItem): boolean {
-  return item.kind === 'glass' || item.kind === 'shaker' || item.kind === 'jigger';
+  return (
+    item.kind === 'glass' ||
+    item.kind === 'shaker' ||
+    item.kind === 'mixing_glass' ||
+    item.kind === 'jigger'
+  );
 }
 
 /** Where liquid leaves the held vessel. */

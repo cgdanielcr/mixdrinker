@@ -384,3 +384,159 @@ body {
 .summary-button:hover {
   opacity: 0.85;
 }
+
+/* ------------------------------------------------ title / shop / run over */
+
+.screen {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 40px 20px;
+  background: #080b0ef5;
+  backdrop-filter: blur(4px);
+  z-index: 40;
+  overflow-y: auto;
+}
+
+.screen h1 {
+  margin: 0;
+  font-size: 34px;
+  letter-spacing: 12px;
+}
+
+.screen h2 {
+  margin: 0;
+  font-size: 15px;
+  letter-spacing: 7px;
+  color: var(--dim);
+}
+
+.tagline {
+  margin: 0;
+  font-size: 13px;
+  color: var(--dim);
+  text-align: center;
+}
+
+.tagline.dim {
+  font-size: 11px;
+  opacity: 0.6;
+}
+
+.rumour {
+  font-style: italic;
+  color: #c3a87a;
+}
+
+.seed-input {
+  width: 220px;
+  padding: 8px 12px;
+  background: #11171b;
+  color: var(--ink);
+  border: 1px solid var(--panel-line);
+  border-radius: 7px;
+  font: inherit;
+  text-align: center;
+}
+
+.shop-items {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: min(620px, 92vw);
+}
+
+.shop-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 14px;
+  background: #0f1418;
+  border: 1px solid var(--panel-line);
+  border-radius: 8px;
+  font-size: 13px;
+}
+
+.shop-item .dim {
+  color: var(--dim);
+  font-size: 11px;
+}
+
+.summary-button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.run-table {
+  width: min(560px, 92vw);
+  font-size: 13px;
+}
+
+.run-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
+  gap: 8px;
+  padding: 5px 10px;
+  border-bottom: 1px solid var(--panel-line);
+}
+
+.run-row.head {
+  color: var(--dim);
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.run-row span:not(:first-child) {
+  text-align: right;
+}
+
+.verdict {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.good {
+  color: #9fe0b4;
+}
+
+.bad {
+  color: #ff9a8f;
+}
+
+/* Reputation breakdown on the night summary. */
+.rep-rows {
+  width: min(420px, 90vw);
+  font-size: 13px;
+}
+
+.rep-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 3px 0;
+  border-bottom: 1px solid #ffffff10;
+}
+
+.rep-row span:first-child {
+  color: var(--dim);
+}
+
+/* Reputation in the HUD, coloured by band. */
+.hud-stat.rep.thriving {
+  color: #9fe0b4;
+}
+.hud-stat.rep.steady {
+  color: #c8d6e0;
+}
+.hud-stat.rep.shaky {
+  color: #e8c07a;
+}
+.hud-stat.rep.failing {
+  color: #ff9a8f;
+}
