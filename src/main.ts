@@ -92,8 +92,12 @@ async function main(): Promise<void> {
   const controller = new RunController(game, world);
 
   // A seed in the URL starts the week on it (§12: shareable, and free).
-  const urlSeed = Number(new URLSearchParams(location.search).get('seed'));
+  // `?night=3` jumps straight to a night, for playtesting its pacing.
+  const params = new URLSearchParams(location.search);
+  const urlSeed = Number(params.get('seed'));
   const seedFromUrl = Number.isFinite(urlSeed) && urlSeed > 0 ? urlSeed >>> 0 : null;
+  const urlNight = Number(params.get('night'));
+  const nightFromUrl = Number.isFinite(urlNight) && urlNight >= 1 ? Math.floor(urlNight) : 1;
 
   /** Show exactly the screen the current phase calls for. */
   const showPhase = (): void => {
@@ -117,7 +121,7 @@ async function main(): Promise<void> {
   };
 
   title.onStart = (seed) => {
-    controller.startRun(seed);
+    controller.startRun(seed, nightFromUrl);
     showPhase();
   };
   title.onContinue = () => {
@@ -137,8 +141,8 @@ async function main(): Promise<void> {
     showPhase();
   };
 
-  if (seedFromUrl !== null) {
-    controller.startRun(seedFromUrl);
+  if (seedFromUrl !== null || nightFromUrl > 1) {
+    controller.startRun(seedFromUrl, nightFromUrl);
   }
   showPhase();
 

@@ -5,6 +5,43 @@ Format per session: what was tried, what felt good, what didn't, numbers that ch
 
 ---
 
+## 2026-09-23 — First contact with a human, and the bug it found
+
+Daniel opened it and said: _"if I do 'start run' I have no missions, nothing to
+do."_ He was right, and no amount of simulation would ever have caught it.
+
+**The bar opened empty.** The pacing curves start deliberately low (a night is
+supposed to begin calm), but nothing was seeded at the door, so night 1 ran
+**38 real seconds before the first customer** and **97 before the third**. You
+press Start and look at an empty room. The simulator never noticed because it
+happily waits; a person correctly concludes the game is broken.
+
+Fix: `OPENING.ARRIVALS_BY_NIGHT` seeds 2-4 people already at the bar when the
+doors open, spread over the first 7 game minutes, plus the opening rates of
+every curve were lifted. Now:
+
+| night | 1st customer | 3rd customer |
+| ----- | ------------ | ------------ |
+| 1     | 4.2s         | 16.2s        |
+| 5     | 2.5s         | 7.2s         |
+
+Two tests failed on the way and were right to: an arrival at _exactly_ minute
+zero falls outside every half-open `(from, to]` window, so opening arrivals are
+now placed strictly after the door opens.
+
+Those extra arrivals moved the difficulty, so `REP.WALKOUT` went -1.3 → -1.1 to
+put a competent week back in §12's band: **49, 54, 44** across three seeds,
+expert 83-87, sloppy fired every time.
+
+Also added `?night=3` to jump straight to a night. The pressure §8 cares about
+lives on night 3 and nobody should play 27 minutes to reach it.
+
+**The lesson worth keeping:** three phases of simulation said the numbers were
+right, and the first ten seconds of a real person's attention found a blocker
+none of it could see. The remaining unknowns are all of that kind.
+
+---
+
 ## 2026-09-09 — Session 4: Phase 3, pressure and the run
 
 Five nights at one bar, reputation as HP, a cellar that runs dry, a shop

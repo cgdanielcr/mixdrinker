@@ -142,6 +142,20 @@ export const NIGHT = {
   SEATS: 5,
 } as const;
 
+export const OPENING = {
+  /**
+   * People already at the bar when the doors open, by night.
+   *
+   * Without this the pacing curve alone left night 1 with 38 real seconds of
+   * empty bar before the first customer, and 97 before the third — you start
+   * the game and there is visibly nothing to do. A bar at opening time has its
+   * first drinkers already waiting.
+   */
+  ARRIVALS_BY_NIGHT: [2, 2, 3, 3, 4],
+  /** Game minutes over which those opening arrivals trickle in. */
+  WINDOW_MINUTES: 7,
+} as const;
+
 export const PATIENCE = {
   /**
    * Game minutes an average customer will wait for a drink they have ordered.
@@ -216,7 +230,7 @@ export const RUN = {
  * §12 sets is a competent player finishing the week around 40-60.
  */
 export const REP = {
-  WALKOUT: -1.3,
+  WALKOUT: -1.1,
   SENT_BACK: -1.8,
   SERVED_WHILE_CUT_OFF: -7,
   /** Closing time with someone still waiting on a drink. */

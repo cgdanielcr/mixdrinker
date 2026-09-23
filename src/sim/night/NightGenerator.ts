@@ -8,7 +8,7 @@
  * deterministic from (seed, barId, night) so a night can be replayed from the
  * number printed on the summary.
  */
-import { NIGHT, SPECIALS } from '../../tuning';
+import { NIGHT, OPENING, SPECIALS } from '../../tuning';
 import { createRng } from '../run/Rng';
 import { applicableSpecials } from '../drinks/Specials';
 import { recipe } from '../data';
@@ -65,6 +65,31 @@ export function generateNight(
   const lengthMinutes = NIGHT.CLOSE_MINUTE - NIGHT.OPEN_MINUTE;
   const arrivals: PlannedArrival[] = [];
 
+  /** One arrival, cast and ordered from the seeded streams. */
+  const makeArrival = (atMinute: number): PlannedArrival => {
+    const recipeId = orderRng.pick(menu);
+    const choices = applicableSpecials(recipe(recipeId));
+    const specials =
+      choices.length > 0 && specialRng.chance(specialChance) ? [specialRng.pick(choices)] : [];
+    return {
+      atMinute,
+      defId: castRng.weighted(
+        bar.clientele.map((entry) => ({ item: entry.customerId, weight: entry.weight })),
+      ),
+      recipeId,
+      ...(specials.length > 0 ? { specials } : {}),
+    };
+  };
+
+  // People already at the bar when the doors open. Without these the curve
+  // alone leaves the player looking at an empty room for the first half minute.
+  const opening = OPENING.ARRIVALS_BY_NIGHT[night - 1] ?? OPENING.ARRIVALS_BY_NIGHT.at(-1) ?? 1;
+  for (let i = 0; i < opening; i++) {
+    // Strictly after the doors open, never at minute zero exactly: an arrival
+    // at 0 falls outside every half-open (from, to] window.
+    arrivals.push(makeArrival(((i + 1) / (opening + 1)) * OPENING.WINDOW_MINUTES));
+  }
+
   // Walk the night a minute at a time, accumulating expected arrivals. This is
   // stable under curve edits in a way that sampling gaps is not.
   let pending = 0;
@@ -72,20 +97,8 @@ export function generateNight(
     pending += arrivalRateAt(curve, minute);
     while (pending >= 1) {
       pending -= 1;
-      const recipeId = orderRng.pick(menu);
-      const options_ = applicableSpecials(recipe(recipeId));
-      const specials =
-        options_.length > 0 && specialRng.chance(specialChance) ? [specialRng.pick(options_)] : [];
-
-      arrivals.push({
-        // Jitter inside the minute, so arrivals do not land on a metronome.
-        atMinute: minute + arrivalRng.next(),
-        defId: castRng.weighted(
-          bar.clientele.map((entry) => ({ item: entry.customerId, weight: entry.weight })),
-        ),
-        recipeId,
-        ...(specials.length > 0 ? { specials } : {}),
-      });
+      // Jitter inside the minute, so arrivals do not land on a metronome.
+      arrivals.push(makeArrival(minute + arrivalRng.next()));
     }
   }
 

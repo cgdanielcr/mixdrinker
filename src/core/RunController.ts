@@ -44,8 +44,16 @@ export class RunController {
 
   // ------------------------------------------------------------------ flow
 
-  startRun(seed: number | null): void {
+  /**
+   * `startNight` is a playtesting shortcut: the pressure §8 cares about lives
+   * on night 3, and nobody should have to play 27 minutes to reach it. It
+   * skips straight there with a full reputation and a full cellar, so what you
+   * are testing is that night's pacing rather than a fiction about the two
+   * before it.
+   */
+  startRun(seed: number | null, startNight = 1): void {
     this.run = createRun(seed ?? randomSeed());
+    this.run.night = Math.max(1, Math.min(RUN.NIGHTS, Math.floor(startNight)));
     this.meta.runsPlayed += 1;
     saveMeta(this.meta);
     saveRun(this.run);
