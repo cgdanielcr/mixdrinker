@@ -522,3 +522,23 @@ mixing glass (+ bar spoon), jigger. Rocks was pass 2.
 
 Bottles (ART.md §3), then ice cubes and the ice bin: the code-drawn cubes look
 off-style next to painted glass. Play a stir to check the spoon.
+
+## Art pass 4: bottles
+
+All ten bottles painted (`bottle_<ingredientId>.png`, looked up by
+`bottleArt(id)` in `Art.ts`).
+
+- Drawn at the full 168 px box height with each bottle's own proportions
+  (52–63 px wide; soda is the widest). Hit boxes stay 58×168.
+- Every neck was centred to within ~1 px at display size, so the pour pivot
+  (cursor = mouth, `baseForMouthAt`) needed no per-bottle offset. Verified with
+  a real pointer-driven pour: gin into the highball, 48.8 ml, stream leaves the
+  mouth and lands in the glass.
+- Painted bottles hide the text label (it's lettered on) and no longer draw
+  the in-bottle liquid level, per the ART.md §3 decision. Placeholder bottles
+  keep both.
+
+### Next session starts here
+
+Ice cubes + ice bin (ART.md §4) — the code-drawn cubes are now the most
+off-style thing on screen. Then the other stations, then customers.

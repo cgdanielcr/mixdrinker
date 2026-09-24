@@ -66,16 +66,16 @@ Opaque body in the ingredient's colour, label lettered in. **Neck centred, mouth
 at exact top-centre** — the cursor is the mouth while pouring.
 Decision: opaque bottles drop the in-bottle liquid level currently drawn.
 
-- [ ] `bottle/tequila_blanco.png`
-- [ ] `bottle/gin.png`
-- [ ] `bottle/triple_sec.png`
-- [ ] `bottle/dry_vermouth.png`
-- [ ] `bottle/lime_juice.png`
-- [ ] `bottle/orange_juice.png`
-- [ ] `bottle/simple_syrup.png`
-- [ ] `bottle/grenadine.png`
-- [ ] `bottle/soda.png`
-- [ ] `bottle/cola.png`
+- [x] `bottle/tequila_blanco.png`
+- [x] `bottle/gin.png`
+- [x] `bottle/triple_sec.png`
+- [x] `bottle/dry_vermouth.png`
+- [x] `bottle/lime_juice.png`
+- [x] `bottle/orange_juice.png`
+- [x] `bottle/simple_syrup.png`
+- [x] `bottle/grenadine.png`
+- [x] `bottle/soda.png`
+- [x] `bottle/cola.png`
 
 ## 4. Stations and garnish — priority 4
 

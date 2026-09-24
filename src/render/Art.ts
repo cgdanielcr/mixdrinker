@@ -23,6 +23,16 @@ import toolShakerCap from '../assets/art/tool_shaker_cap.png';
 import toolMixingGlass from '../assets/art/tool_mixing_glass.png';
 import toolJigger from '../assets/art/tool_jigger.png';
 import toolBarSpoon from '../assets/art/tool_bar_spoon.png';
+import bottleTequilaBlanco from '../assets/art/bottle_tequila_blanco.png';
+import bottleGin from '../assets/art/bottle_gin.png';
+import bottleTripleSec from '../assets/art/bottle_triple_sec.png';
+import bottleDryVermouth from '../assets/art/bottle_dry_vermouth.png';
+import bottleLimeJuice from '../assets/art/bottle_lime_juice.png';
+import bottleOrangeJuice from '../assets/art/bottle_orange_juice.png';
+import bottleSimpleSyrup from '../assets/art/bottle_simple_syrup.png';
+import bottleGrenadine from '../assets/art/bottle_grenadine.png';
+import bottleSoda from '../assets/art/bottle_soda.png';
+import bottleCola from '../assets/art/bottle_cola.png';
 
 const SOURCES = {
   customerBand,
@@ -40,6 +50,16 @@ const SOURCES = {
   toolMixingGlass,
   toolJigger,
   toolBarSpoon,
+  bottle_tequila_blanco: bottleTequilaBlanco,
+  bottle_gin: bottleGin,
+  bottle_triple_sec: bottleTripleSec,
+  bottle_dry_vermouth: bottleDryVermouth,
+  bottle_lime_juice: bottleLimeJuice,
+  bottle_orange_juice: bottleOrangeJuice,
+  bottle_simple_syrup: bottleSimpleSyrup,
+  bottle_grenadine: bottleGrenadine,
+  bottle_soda: bottleSoda,
+  bottle_cola: bottleCola,
 } as const;
 
 export type ArtKey = keyof typeof SOURCES;
@@ -187,6 +207,12 @@ function silhouetteOf(texture: Texture, spec: VesselArt): Texture | null {
 
 export function silhouette(key: ArtKey): Texture | null {
   return silhouettes[key] ?? null;
+}
+
+/** Painted bottle for an ingredient, if there is one. */
+export function bottleArt(ingredientId: string): Texture | null {
+  const key = `bottle_${ingredientId}`;
+  return key in SOURCES ? art(key as ArtKey) : null;
 }
 
 export function art(key: ArtKey): Texture | null {

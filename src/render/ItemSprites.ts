@@ -12,7 +12,7 @@ import { ingredient } from '../sim/data';
 import type { World, WorldItem } from '../core/World';
 import { tiltAngleRad } from '../core/World';
 import { damp, mixColors } from './Juice';
-import { art, INK, silhouette, VESSEL_ART, type ArtKey, type VesselArt } from './Art';
+import { art, bottleArt, INK, silhouette, VESSEL_ART, type ArtKey, type VesselArt } from './Art';
 
 /** Items resting below this line sit on the work band's paper, not the dark bar. */
 const WORK_TOP = LAYOUT.HEIGHT * (LAYOUT.BAND_CUSTOMER + LAYOUT.BAND_COUNTER);
@@ -61,6 +61,8 @@ export class ItemView {
   private hasArt = false;
   /** Painted glass: drawn over the liquid, which it clips and frames. */
   private readonly glassArt: VesselArt | null;
+  /** Painted bottle: opaque, label lettered in, so no text label or level. */
+  private readonly bottleSprite: Sprite | null = null;
   private spoon: Sprite | null = null;
   private spoonRestX = 0;
   private spoonPhase = 0;
@@ -92,6 +94,17 @@ export class ItemView {
     const inkLabel = this.onPaper && item.kind !== 'bottle';
     if (inkLabel) this.label.style.fill = INK;
     this.container.addChild(this.body);
+    const bottleTexture =
+      item.kind === 'bottle' && item.ingredientId ? bottleArt(item.ingredientId) : null;
+    if (bottleTexture) {
+      // Full box height, own proportions: bottles differ in width, and the
+      // mouth stays at top-centre, which is where the cursor pours from.
+      const sprite = new Sprite(bottleTexture);
+      sprite.anchor.set(0.5, 1);
+      sprite.setSize((item.height * bottleTexture.width) / bottleTexture.height, item.height);
+      this.bottleSprite = sprite;
+      this.container.addChild(sprite);
+    }
     if (this.glassArt && glassTexture) this.addVesselArt(this.glassArt, glassTexture);
     else this.container.addChild(this.liquid);
     this.container.addChild(this.gloss, this.label, this.guide, this.guideLabel);
@@ -196,6 +209,10 @@ export class ItemView {
 
     switch (item.kind) {
       case 'bottle': {
+        if (this.bottleSprite) {
+          this.label.visible = false;
+          break;
+        }
         const neckW = w * 0.34;
         const neckH = h * 0.3;
         const bodyH = h - neckH;
@@ -394,8 +411,10 @@ export class ItemView {
 
     this.shownFill = damp(this.shownFill, fillFraction(item.vessel), FEEL.FILL_EASE * 60, dtSec);
 
-    if (item.kind === 'bottle') this.drawBottleLiquid(tilt, held);
-    else this.drawVesselLiquid();
+    // Painted bottles are opaque (ART.md §3): no level drawn inside.
+    if (item.kind === 'bottle') {
+      if (!this.bottleSprite) this.drawBottleLiquid(tilt, held);
+    } else this.drawVesselLiquid();
   }
 
   private drawStationOverlay(world: World): void {
