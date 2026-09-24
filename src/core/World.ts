@@ -137,10 +137,11 @@ const STATIONS: {
   x: number;
   y?: number;
 }[] = [
-  { station: 'ice', label: 'ICE', width: 124, height: 96, x: 986 },
-  { station: 'salt', label: 'SALT', width: 116, height: 34, x: 1130 },
-  { station: 'garnish', label: 'LIME', width: 116, height: 44, x: 1268 },
-  { station: 'sink', label: 'SINK', width: 152, height: 74, x: 1414 },
+  // Heights follow the painted art's proportions (ART.md §4).
+  { station: 'ice', label: 'ICE', width: 124, height: 76, x: 986 },
+  { station: 'salt', label: 'SALT', width: 116, height: 47, x: 1130 },
+  { station: 'garnish', label: 'LIME', width: 130, height: 39, x: 1268 },
+  { station: 'sink', label: 'SINK', width: 152, height: 49, x: 1414 },
   // The book lives on the counter, not the work band: it is the one thing
   // you reach for mid-service, and the right of the work band is covered by
   // the debug panel at common window sizes.

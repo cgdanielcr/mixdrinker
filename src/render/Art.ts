@@ -23,6 +23,13 @@ import toolShakerCap from '../assets/art/tool_shaker_cap.png';
 import toolMixingGlass from '../assets/art/tool_mixing_glass.png';
 import toolJigger from '../assets/art/tool_jigger.png';
 import toolBarSpoon from '../assets/art/tool_bar_spoon.png';
+import stationIceBin from '../assets/art/station_ice_bin.png';
+import stationSaltDish from '../assets/art/station_salt_dish.png';
+import stationLimeTray from '../assets/art/station_lime_tray.png';
+import stationSink from '../assets/art/station_sink.png';
+import iceCube1 from '../assets/art/ice_cube_1.png';
+import iceCube2 from '../assets/art/ice_cube_2.png';
+import iceCube3 from '../assets/art/ice_cube_3.png';
 import bottleTequilaBlanco from '../assets/art/bottle_tequila_blanco.png';
 import bottleGin from '../assets/art/bottle_gin.png';
 import bottleTripleSec from '../assets/art/bottle_triple_sec.png';
@@ -50,6 +57,13 @@ const SOURCES = {
   toolMixingGlass,
   toolJigger,
   toolBarSpoon,
+  stationIceBin,
+  stationSaltDish,
+  stationLimeTray,
+  stationSink,
+  iceCube1,
+  iceCube2,
+  iceCube3,
   bottle_tequila_blanco: bottleTequilaBlanco,
   bottle_gin: bottleGin,
   bottle_triple_sec: bottleTripleSec,
@@ -63,6 +77,22 @@ const SOURCES = {
 } as const;
 
 export type ArtKey = keyof typeof SOURCES;
+
+/** Painted sprite per station. The recipe book's card keeps its own fit. */
+export const STATION_ART: Readonly<Record<string, ArtKey>> = {
+  ice: 'stationIceBin',
+  salt: 'stationSaltDish',
+  garnish: 'stationLimeTray',
+  sink: 'stationSink',
+  book: 'recipeCard',
+};
+
+/** Loaded ice cube variants, in order. Empty if none loaded. */
+export function iceCubes(): Texture[] {
+  return (['iceCube1', 'iceCube2', 'iceCube3'] as const)
+    .map((key) => art(key))
+    .filter((t): t is Texture => t !== null);
+}
 
 /** Ink on paper: text and strokes that sit on the cream work band. */
 export const INK = 0x1d1a17;

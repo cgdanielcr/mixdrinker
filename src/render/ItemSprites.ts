@@ -12,7 +12,17 @@ import { ingredient } from '../sim/data';
 import type { World, WorldItem } from '../core/World';
 import { tiltAngleRad } from '../core/World';
 import { damp, mixColors } from './Juice';
-import { art, bottleArt, INK, silhouette, VESSEL_ART, type ArtKey, type VesselArt } from './Art';
+import {
+  art,
+  bottleArt,
+  iceCubes,
+  INK,
+  silhouette,
+  STATION_ART,
+  VESSEL_ART,
+  type ArtKey,
+  type VesselArt,
+} from './Art';
 
 /** Items resting below this line sit on the work band's paper, not the dark bar. */
 const WORK_TOP = LAYOUT.HEIGHT * (LAYOUT.BAND_CUSTOMER + LAYOUT.BAND_COUNTER);
@@ -43,6 +53,10 @@ export class ItemView {
   readonly container = new Container();
   private readonly body = new Graphics();
   private readonly liquid = new Graphics();
+  /** Painted ice cubes, pooled. Sits with the liquid, inside the glass. */
+  private readonly ice = new Container();
+  /** Liquid plus ice: what the glass silhouette clips. */
+  private readonly contents = new Container();
   private readonly gloss = new Graphics();
   private readonly label: Text;
   private readonly item: WorldItem;
@@ -105,8 +119,9 @@ export class ItemView {
       this.bottleSprite = sprite;
       this.container.addChild(sprite);
     }
+    this.contents.addChild(this.liquid, this.ice);
     if (this.glassArt && glassTexture) this.addVesselArt(this.glassArt, glassTexture);
-    else this.container.addChild(this.liquid);
+    else this.container.addChild(this.contents);
     this.container.addChild(this.gloss, this.label, this.guide, this.guideLabel);
     this.drawStatic();
     // Faint white read as a soft glow on the dark bar; faint ink just looks grey.
@@ -115,15 +130,22 @@ export class ItemView {
 
   /** Painted sprite for this item, bottom-centre anchored like the Graphics. */
   private paintedSprite(): Sprite | null {
+    const item = this.item;
     const key: ArtKey | null =
-      this.item.kind === 'seat' ? 'serveSpot' : this.item.station === 'book' ? 'recipeCard' : null;
+      item.kind === 'seat'
+        ? 'serveSpot'
+        : item.station
+          ? (STATION_ART[item.station] ?? null)
+          : null;
     const texture = key ? art(key) : null;
     if (!texture) return null;
     const sprite = new Sprite(texture);
     sprite.anchor.set(0.5, 1);
-    // Fit the hit box's height and keep the painting's proportions.
-    const scale = this.item.height / texture.height;
-    sprite.scale.set(this.item.kind === 'seat' ? this.item.width / texture.width : scale);
+    if (item.kind === 'seat') sprite.scale.set(item.width / texture.width);
+    // The card is narrower than its hit box; keep its proportions.
+    else if (item.station === 'book') sprite.scale.set(item.height / texture.height);
+    // Station hit boxes were sized to their art (World.ts).
+    else sprite.setSize(item.width, item.height);
     this.hasArt = true;
     return sprite;
   }
@@ -151,14 +173,14 @@ export class ItemView {
 
     const glass = this.fitted(texture, bodyH);
     if (spec.opening) {
-      this.container.addChild(glass, this.liquid);
+      this.container.addChild(glass, this.contents);
     } else {
-      this.container.addChild(this.liquid, glass);
+      this.container.addChild(this.contents, glass);
       const mask = silhouette(spec.key);
       if (mask) {
         const maskSprite = this.fitted(mask, bodyH);
         this.container.addChild(maskSprite);
-        this.liquid.mask = maskSprite;
+        this.contents.mask = maskSprite;
       }
     }
 
@@ -326,7 +348,7 @@ export class ItemView {
     const w = item.width;
     const h = item.height;
 
-    switch (item.station) {
+    switch (this.hasArt ? null : item.station) {
       case 'ice':
         g.roundRect(-w / 2, -h, w, h, 8).fill({ color: 0x35424d });
         g.roundRect(-w / 2 + 7, -h + 7, w - 14, h - 16, 6).fill({ color: 0x0f1519 });
@@ -362,7 +384,6 @@ export class ItemView {
         break;
 
       case 'book':
-        if (this.hasArt) break;
         g.roundRect(-w / 2, -h, w, h, 5).fill({ color: 0x7d3b2e });
         g.roundRect(-w / 2 + 9, -h + 9, w - 18, h - 18, 3).fill({ color: 0xc9b391 });
         g.rect(-w / 2 + 4, -h, 7, h).fill({ color: 0x5d2b21 });
@@ -599,6 +620,8 @@ export class ItemView {
   /** Cubes stack from the bottom and sit at the surface once there is liquid. */
   private drawIce(g: Graphics, innerW: number, bottom: number, level: number): void {
     const cubes = Math.round(this.item.vessel.ice);
+    const textures = iceCubes();
+    for (const sprite of this.ice.children) sprite.visible = false;
     if (cubes <= 0) return;
 
     const size = Math.min(26, innerW * 0.34);
@@ -611,6 +634,10 @@ export class ItemView {
       const restY = bottom - row * (size * 0.8) - size;
       const floatY = bottom - Math.max(level - size * 0.35, 0) - row * (size * 0.55) - size * 0.4;
       const y = level > size ? floatY : restY;
+      if (textures.length > 0) {
+        this.placeCube(i, textures, x + size / 2, y + size / 2, size);
+        continue;
+      }
       g.roundRect(x, y, size, size, 4).fill({ color: 0xdff1fb, alpha: 0.62 });
       g.roundRect(x + 3, y + 3, size * 0.35, size * 0.35, 2).fill({
         color: 0xffffff,
@@ -618,6 +645,20 @@ export class ItemView {
       });
     }
   }
+  /** Cube i of the pool: a fixed variant and tilt, so cubes don't flicker. */
+  private placeCube(i: number, textures: Texture[], x: number, y: number, size: number): void {
+    let sprite = this.ice.children[i] as Sprite | undefined;
+    if (!sprite) {
+      sprite = new Sprite(textures[i % textures.length]);
+      sprite.anchor.set(0.5);
+      sprite.rotation = (((i * 37) % 11) - 5) * 0.06;
+      this.ice.addChild(sprite);
+    }
+    sprite.visible = true;
+    sprite.position.set(x, y);
+    sprite.setSize(size * 1.1, size * 1.1);
+  }
+
   /**
    * The tutorial's two aids. A ring that breathes around the one thing to touch
    * next, and a fill line on the glass: "pour about half a second" produced a

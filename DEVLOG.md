@@ -542,3 +542,27 @@ All ten bottles painted (`bottle_<ingredientId>.png`, looked up by
 
 Ice cubes + ice bin (ART.md §4) — the code-drawn cubes are now the most
 off-style thing on screen. Then the other stations, then customers.
+
+## Art pass 5: stations and ice
+
+Ice bin, salt dish, lime tray, sink and three ice cube variants painted.
+
+- Station sprites come from `STATION_ART` in `Art.ts` (the recipe card moved
+  there too). Station hit boxes keep their widths and take their heights from
+  the art: ice 124×76, salt 116×47, lime 130×39 (widened: the tray is thin),
+  sink 152×49. Verified with pointer-driven use of all four on a rocks glass:
+  ice +1, salt rim, lime wedge, sink empties.
+- Ice cubes arrived as one sheet; split by empty columns into
+  `ice_cube_1..3.png`. In a glass they are pooled sprites with a fixed variant
+  and tilt per index (no flicker), in a `contents` container with the liquid.
+  **The glass silhouette now masks `contents`**, not just the liquid, so cubes
+  sit inside the glass and its walls cover their edges. Placeholder glasses
+  still get the Graphics cubes if the cube art fails to load.
+- The lime tray art also shows lemon and orange twists; only lime exists in
+  the game so far.
+
+### Next session starts here
+
+Still unpainted: lime wedge on the rim and salt rims (ART.md §4 garnish),
+customers (§5), UI bits (§6). The code-drawn garnish/salt are the most visible
+leftovers on a finished drink.

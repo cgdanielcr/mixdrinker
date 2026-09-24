@@ -79,11 +79,11 @@ Decision: opaque bottles drop the in-bottle liquid level currently drawn.
 
 ## 4. Stations and garnish — priority 4
 
-- [ ] `station/ice_bin.png` — 124×96
-- [ ] `station/ice_cube_1..3.png` — ~22×22, 2–3 variants
-- [ ] `station/salt_dish.png` — 116×34
-- [ ] `station/lime_tray.png` — 116×44
-- [ ] `station/sink.png` — 152×74 (not in the mockup; sits after the lime)
+- [x] `station/ice_bin.png` — hit box now 124×76
+- [x] `station/ice_cube_1..3.png` — delivered as one sheet, split into 3
+- [x] `station/salt_dish.png` — hit box now 116×47
+- [x] `station/lime_tray.png` — hit box now 130×39
+- [x] `station/sink.png` — hit box now 152×49
 - [ ] `garnish/lime_wedge.png` — ~34×24, sits on a rim
 - [ ] `garnish/salt_rim_rocks.png`, `_coupe.png`, `_highball.png` — glass width × ~12
 
