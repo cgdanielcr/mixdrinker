@@ -10,4 +10,4 @@ coverage/
 dist-single/
 
 # Raw art exports; processed copies live in src/assets/art
-art/
+/art/
