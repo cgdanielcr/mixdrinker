@@ -33,15 +33,10 @@ All sizes are in the game's logical 1920×1080 space. Tick items off as they lan
 | Olive | |
 | Bottle green | |
 
-## Layered vessels
+## Vessels
 
-Anything that holds liquid comes in three aligned files, same canvas size:
-
-1. **`_back`** — back wall and inner shading, drawn behind the liquid.
-2. **`_front`** — outline, front rim, highlights, drawn over the liquid; mostly
-   transparent in the middle.
-3. **`_mask`** — the inside cavity as solid white on transparent. Clips the
-   liquid to the real shape (coupe bowl, shaker taper).
+See [ART_GLASSES.md](ART_GLASSES.md). One image per glass or tool; the game
+computes the liquid clip from it.
 
 ## 1. Backgrounds and texture — priority 1
 
@@ -52,9 +47,10 @@ Anything that holds liquid comes in three aligned files, same canvas size:
 - [x] `counter/serve_spot.png` — 132×26. Outlined rectangle; tinted by code on hover.
 - [x] `counter/recipe_card.png` — 104×130. Opens the recipe book.
 
-## 2. Glassware and tools — priority 2 (each `_back` / `_front` / `_mask`)
+## 2. Glassware and tools — priority 2
 
-Send `rocks` first so the layering can be checked before the rest.
+**Superseded by [ART_GLASSES.md](ART_GLASSES.md):** one image per vessel, no
+separate back/front/mask layers. The list below is kept for ticking off.
 
 - [ ] `glass/rocks` — 100×116. Short, heavy base.
 - [ ] `glass/coupe` — 126×112. Mask = bowl only, not the stem.
