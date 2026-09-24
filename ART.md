@@ -84,8 +84,8 @@ Decision: opaque bottles drop the in-bottle liquid level currently drawn.
 - [x] `station/salt_dish.png` — hit box now 116×47
 - [x] `station/lime_tray.png` — hit box now 130×39
 - [x] `station/sink.png` — hit box now 152×49
-- [ ] `garnish/lime_wedge.png` — ~34×24, sits on a rim
-- [ ] `garnish/salt_rim_rocks.png`, `_coupe.png`, `_highball.png` — glass width × ~12
+- [x] `garnish/lime_wedge.png` — drawn 40×31, hooked over the rim
+- [x] `garnish/salt_rim_rocks.png`, `_coupe.png`, `_highball.png` — rings; sugar is the same art tinted
 
 ## 5. Customers — priority 3
 
@@ -103,6 +103,7 @@ fade-out are code.
 | `lightweight` | Lightweight | Young, slight |
 | `hardcase` | Hard case | Broad, heavy jacket |
 
+- [x] Two test looks (`customer_a`, `customer_b`), assigned to any archetype by id hash
 - [ ] `customer/regular_{neutral,impatient,happy}.png`
 - [ ] `customer/hurried_{neutral,impatient,happy}.png`
 - [ ] `customer/snob_{neutral,impatient,happy}.png`
@@ -113,9 +114,8 @@ fade-out are code.
 
 ## 6. UI — priority 4
 
-- [ ] `ui/bubble.png` — order bubble as a **9-slice**, ~120×60, tail bottom-centre,
-      corners and tail within a 16 px margin.
-- [ ] `ui/patience_frame.png` — 92×12 pill outline; fill is code.
+- [x] `ui/bubble.png` — tail came bottom-left; 9-slice with the tail in the left column.
+- [x] `ui/patience_frame.png` — drawn 130×30; its painted fill is covered by the live one.
 - [ ] `ui/hand_open.png`, `ui/hand_grab.png` — optional cursor, ~48×48.
 - [ ] Font choice — free (OFL) condensed display face, e.g. Bebas Neue or Oswald.
       Add to `CREDITS.md`.

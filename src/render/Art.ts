@@ -30,6 +30,18 @@ import stationSink from '../assets/art/station_sink.png';
 import iceCube1 from '../assets/art/ice_cube_1.png';
 import iceCube2 from '../assets/art/ice_cube_2.png';
 import iceCube3 from '../assets/art/ice_cube_3.png';
+import garnishLimeWedge from '../assets/art/garnish_lime_wedge.png';
+import saltRimRocks from '../assets/art/salt_rim_rocks.png';
+import saltRimCoupe from '../assets/art/salt_rim_coupe.png';
+import saltRimHighball from '../assets/art/salt_rim_highball.png';
+import uiBubble from '../assets/art/ui_bubble.png';
+import uiPatienceFrame from '../assets/art/ui_patience_frame.png';
+import customerANeutral from '../assets/art/customer_a_neutral.png';
+import customerAImpatient from '../assets/art/customer_a_impatient.png';
+import customerAHappy from '../assets/art/customer_a_happy.png';
+import customerBNeutral from '../assets/art/customer_b_neutral.png';
+import customerBImpatient from '../assets/art/customer_b_impatient.png';
+import customerBHappy from '../assets/art/customer_b_happy.png';
 import bottleTequilaBlanco from '../assets/art/bottle_tequila_blanco.png';
 import bottleGin from '../assets/art/bottle_gin.png';
 import bottleTripleSec from '../assets/art/bottle_triple_sec.png';
@@ -64,6 +76,18 @@ const SOURCES = {
   iceCube1,
   iceCube2,
   iceCube3,
+  garnishLimeWedge,
+  saltRimRocks,
+  saltRimCoupe,
+  saltRimHighball,
+  uiBubble,
+  uiPatienceFrame,
+  customerANeutral,
+  customerAImpatient,
+  customerAHappy,
+  customerBNeutral,
+  customerBImpatient,
+  customerBHappy,
   bottle_tequila_blanco: bottleTequilaBlanco,
   bottle_gin: bottleGin,
   bottle_triple_sec: bottleTripleSec,
@@ -94,6 +118,29 @@ export function iceCubes(): Texture[] {
     .filter((t): t is Texture => t !== null);
 }
 
+/** One painted customer: the same figure in three expressions. */
+export interface CustomerLook {
+  neutral: Texture;
+  impatient: Texture;
+  happy: Texture;
+}
+
+/** Every customer look whose three expressions all loaded. */
+export function customerLooks(): CustomerLook[] {
+  const sets: [ArtKey, ArtKey, ArtKey][] = [
+    ['customerANeutral', 'customerAImpatient', 'customerAHappy'],
+    ['customerBNeutral', 'customerBImpatient', 'customerBHappy'],
+  ];
+  const out: CustomerLook[] = [];
+  for (const [n, i, h] of sets) {
+    const neutral = art(n);
+    const impatient = art(i);
+    const happy = art(h);
+    if (neutral && impatient && happy) out.push({ neutral, impatient, happy });
+  }
+  return out;
+}
+
 /** Ink on paper: text and strokes that sit on the cream work band. */
 export const INK = 0x1d1a17;
 
@@ -113,6 +160,11 @@ export interface VesselArt {
    * the top opening instead. Ellipse centre and radii as sprite fractions.
    */
   opening?: { cy: number; rx: number; ry: number };
+  /**
+   * Painted salt crust for the rim. cy: centre of the rim ellipse as a sprite
+   * fraction; ratio: crust height over glass width (rim ellipse plus crystals).
+   */
+  saltRim?: { key: ArtKey; cy: number; ratio: number };
   key: ArtKey;
   /** Inner floor: where the liquid starts. Below it is solid base. */
   floor: number;
@@ -124,10 +176,28 @@ export interface VesselArt {
 
 /** Keyed by glass type, or by vessel kind for tools. */
 export const VESSEL_ART: Readonly<Record<string, VesselArt>> = {
-  rocks: { key: 'glassRocks', floor: 0.794, rim: 0.134, innerW: 0.66 },
+  rocks: {
+    key: 'glassRocks',
+    floor: 0.794,
+    rim: 0.134,
+    innerW: 0.66,
+    saltRim: { key: 'saltRimRocks', cy: 0.076, ratio: 0.23 },
+  },
   // The bowl's curve comes from the silhouette mask; floor is the bowl's bottom.
-  coupe: { key: 'glassCoupe', floor: 0.418, rim: 0.165, innerW: 0.9 },
-  highball: { key: 'glassHighball', floor: 0.782, rim: 0.08, innerW: 0.66 },
+  coupe: {
+    key: 'glassCoupe',
+    floor: 0.418,
+    rim: 0.165,
+    innerW: 0.9,
+    saltRim: { key: 'saltRimCoupe', cy: 0.086, ratio: 0.24 },
+  },
+  highball: {
+    key: 'glassHighball',
+    floor: 0.782,
+    rim: 0.08,
+    innerW: 0.66,
+    saltRim: { key: 'saltRimHighball', cy: 0.044, ratio: 0.26 },
+  },
   shot: { key: 'glassShot', floor: 0.703, rim: 0.176, innerW: 0.66 },
   mixing_glass: {
     key: 'toolMixingGlass',

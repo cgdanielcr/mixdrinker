@@ -78,6 +78,8 @@ export class ItemView {
   /** Painted bottle: opaque, label lettered in, so no text label or level. */
   private readonly bottleSprite: Sprite | null = null;
   private spoon: Sprite | null = null;
+  private saltRim: Sprite | null = null;
+  private limeWedge: Sprite | null = null;
   private spoonRestX = 0;
   private spoonPhase = 0;
   private stir = 0;
@@ -192,6 +194,32 @@ export class ItemView {
       cap.setSize(width, (width * capTexture.height) / capTexture.width);
       cap.y = -bodyH + spec.cap.overlapPx;
       this.container.addChild(cap);
+    }
+
+    // Dressing sits on the rim, over the glass. Hidden until the drink has it.
+    const rimY = -bodyH + (spec.saltRim?.cy ?? spec.rim * 0.5) * bodyH;
+    const saltTexture = spec.saltRim ? art(spec.saltRim.key) : null;
+    if (spec.saltRim && saltTexture) {
+      const salt = new Sprite(saltTexture);
+      salt.anchor.set(0.5);
+      const width = item.width * 1.04;
+      salt.setSize(width, width * spec.saltRim.ratio);
+      salt.y = rimY;
+      salt.visible = false;
+      this.saltRim = salt;
+      this.container.addChild(salt);
+    }
+    const wedgeTexture = art('garnishLimeWedge');
+    if (wedgeTexture) {
+      const wedge = new Sprite(wedgeTexture);
+      // Pivot near the cut face, so it hangs over the rim rather than floating.
+      wedge.anchor.set(0.3, 0.75);
+      wedge.setSize(40, 31);
+      wedge.position.set(item.width * 0.42, rimY);
+      wedge.rotation = -0.35;
+      wedge.visible = false;
+      this.limeWedge = wedge;
+      this.container.addChild(wedge);
     }
   }
 
@@ -592,8 +620,11 @@ export class ItemView {
 
     this.drawIce(gloss, innerW, bottom, level);
 
-    // Salt rim: a white crust along the lip.
-    if (v.rim) {
+    // Salt rim: a crust along the lip. Sugar is the same crust, warmer.
+    if (this.saltRim) {
+      this.saltRim.visible = v.rim !== undefined;
+      this.saltRim.tint = v.rim === 'sugar' ? 0xf0d9a0 : 0xffffff;
+    } else if (v.rim) {
       gloss.rect(-item.width / 2 - 4, -item.height - 3, item.width + 8, 8).fill({
         color: v.rim === 'salt' ? 0xf4f8fb : 0xe6cf9a,
         alpha: 0.92,
@@ -601,7 +632,9 @@ export class ItemView {
     }
 
     // Garnish: a wedge hooked over the rim.
-    if (v.garnish.includes('lime_wedge')) {
+    const wedge = v.garnish.includes('lime_wedge');
+    if (this.limeWedge) this.limeWedge.visible = wedge;
+    else if (wedge) {
       const gx = item.width / 2 - 6;
       const gy = -item.height - 6;
       gloss.circle(gx, gy, 14).fill({ color: 0x9bd44a });

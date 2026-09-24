@@ -566,3 +566,37 @@ Ice bin, salt dish, lime tray, sink and three ice cube variants painted.
 Still unpainted: lime wedge on the rim and salt rims (ART.md §4 garnish),
 customers (§5), UI bits (§6). The code-drawn garnish/salt are the most visible
 leftovers on a finished drink.
+
+## Art pass 6: garnish, salt rims, first customers, bubble, patience gauge
+
+- **Salt rims** are painted rings placed on each glass's rim ellipse
+  (`VESSEL_ART.saltRim`: `cy` = rim-ellipse centre as a sprite fraction,
+  measured from the art; `ratio` = ring height over glass width). Sugar reuses
+  the salt art tinted `0xf0d9a0`. Shaker/mixing glass keep the Graphics crust.
+- **Lime wedge** sprite (40×31) hooks over the right of the rim on any painted
+  vessel. Rim and wedge sprites sit over the glass and toggle on the vessel's
+  `rim` / `garnish`.
+- **Customers:** two test looks, each three expressions delivered on one sheet
+  and split on empty columns into `customer_{a,b}_{neutral,impatient,happy}`,
+  all three cropped to the same box so the figure doesn't jump between
+  expressions. Any archetype gets a look by a hash of its id (stable all
+  night). Expression: `drinking` → happy, `isImpatient` → impatient, else
+  neutral. Bust is 210 px tall, bottom on the counter's top edge. Drunk now
+  warms the whole figure (tint toward `0xffa08c`) since the painted cheeks are
+  already rosy; sway is unchanged.
+- **Patience gauge:** the frame art has a fill painted into its tube, so the
+  live meter first covers the tube in cream, then draws the fill (teal
+  `0x2f7582`, urgent `0xc2472c`). Tube position measured as frame fractions in
+  `METER`. Names moved below it.
+- **Order bubble:** `NineSliceSprite` at 2× texture scale. The tail arrived
+  bottom-left, so the left slice (112 px) holds it and the balloon opens to the
+  right of the head.
+- Verified in the browser at 3.3× zoom: rims sit on the rims, sugar reads
+  warmer, wedge hangs over the edge; three seated customers show neutral /
+  impatient faces with matching gauges. `happy` not yet seen (needs a serve).
+
+### Next session starts here
+
+Serve a drink and look at the `happy` face. More looks per archetype when the
+art exists. The only placeholder Graphics left on the main screen are the
+hand/cursor and the HUD.
