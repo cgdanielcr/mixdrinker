@@ -234,6 +234,49 @@ function releaseSeats(state: NightState): void {
   state.customers = staying;
 }
 
+/**
+ * Seat someone by hand, outside the generator's plan.
+ *
+ * The tutorial needs exactly one person wanting exactly one drink, which is
+ * the opposite of what a seeded night is for. Everything downstream — serving,
+ * reactions, tips — works the same either way.
+ */
+export function seatCustomer(
+  state: NightState,
+  defId: string,
+  recipeId: string,
+  seat = 0,
+  special?: string[],
+): SeatedCustomer {
+  const existing = customerAtSeat(state, seat);
+  if (existing) {
+    state.customers = state.customers.filter((c) => c.id !== existing.id);
+    state.seats[seat] = null;
+  }
+
+  const customer: SeatedCustomer = {
+    ...createCustomer({
+      id: `t${state.customers.length}_${seat}_${Math.round(state.minute * 100)}`,
+      defId,
+      seat,
+      minute: state.minute,
+      order: { recipeId, ...(special ? { special } : {}) },
+    }),
+    leavingAtMinute: null,
+  };
+  customer.phase = 'waiting';
+
+  state.seats[seat] = customer.id;
+  state.customers.push(customer);
+  return customer;
+}
+
+/** Empty the bar, for moving between tutorial lessons. */
+export function clearCustomers(state: NightState): void {
+  state.customers = [];
+  state.seats = state.seats.map(() => null);
+}
+
 export function customerAtSeat(state: NightState, seat: number): SeatedCustomer | null {
   const id = state.seats[seat];
   if (!id) return null;

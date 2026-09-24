@@ -10,6 +10,7 @@ import tequilaSunrise from '../../data/recipes/tequila_sunrise.json';
 import martini from '../../data/recipes/martini.json';
 import ranchWater from '../../data/recipes/ranch_water.json';
 import ginRickey from '../../data/recipes/gin_rickey.json';
+import colaGlass from '../../data/recipes/cola.json';
 import archetypesJson from '../../data/customers/archetypes.json';
 import diveBar from '../../data/bars/dive.json';
 
@@ -27,10 +28,9 @@ export const VESSEL_DEFS: Readonly<Record<string, VesselDef>> = vesselsJson as R
 
 export const RECIPES: Readonly<Record<string, Recipe>> = Object.freeze(
   Object.fromEntries(
-    ([margarita, ginTonic, tequilaSunrise, martini, ranchWater, ginRickey] as Recipe[]).map((r) => [
-      r.id,
-      r,
-    ]),
+    (
+      [margarita, ginTonic, tequilaSunrise, martini, ranchWater, ginRickey, colaGlass] as Recipe[]
+    ).map((r) => [r.id, r]),
   ),
 );
 

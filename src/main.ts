@@ -19,6 +19,7 @@ import { Hud } from './ui/Hud';
 import { NightSummary } from './ui/NightSummary';
 import { RunController } from './core/RunController';
 import { RunSummaryScreen, ShopScreen, TitleScreen } from './ui/Screens';
+import { TutorialPanel } from './ui/TutorialPanel';
 import './style.css';
 
 async function main(): Promise<void> {
@@ -79,9 +80,11 @@ async function main(): Promise<void> {
   const title = new TitleScreen();
   const shop = new ShopScreen();
   const runOver = new RunSummaryScreen();
+  const tutorialPanel = new TutorialPanel();
   document.body.append(
     book.root,
     hud.root,
+    tutorialPanel.root,
     summary.root,
     title.root,
     shop.root,
@@ -122,6 +125,15 @@ async function main(): Promise<void> {
 
   title.onStart = (seed) => {
     controller.startRun(seed, nightFromUrl);
+    showPhase();
+  };
+  title.onTutorial = () => {
+    controller.startTutorial();
+    showPhase();
+  };
+  tutorialPanel.onSkip = () => controller.skipTutorialStep();
+  tutorialPanel.onExit = (startRun) => {
+    controller.endTutorial(startRun);
     showPhase();
   };
   title.onContinue = () => {
@@ -207,6 +219,9 @@ async function main(): Promise<void> {
         case 'served':
           if (event.verdict === 'rejected') sfx.sentBack();
           else sfx.accepted(event.verdict === 'loved');
+          if (controller.phase === 'tutorial') {
+            controller.noteTutorialServe(event.verdict, event.line, event.score);
+          }
           break;
         case 'cutOff':
           if (event.justified) sfx.accepted(false);
@@ -224,7 +239,13 @@ async function main(): Promise<void> {
     }
 
     book.setOpen(world.bookOpen);
-    hud.update(game.clock, game.night, controller.run);
+    if (controller.phase === 'tutorial') {
+      tutorialPanel.update(controller.updateTutorial(), controller.lastTutorialServe);
+      hud.update(game.clock, null, null);
+    } else {
+      tutorialPanel.hide();
+      hud.update(game.clock, game.night, controller.run);
+    }
     summary.update(controller.phase === 'nightOver' ? game.night : null, controller.lastTotals);
 
     smoothedFps += (ticker.FPS - smoothedFps) * 0.1;

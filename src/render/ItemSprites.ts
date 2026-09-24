@@ -5,7 +5,7 @@
  * Reads world state, never writes it.
  */
 import { Container, Graphics, Text, TextStyle } from 'pixi.js';
-import { FEEL } from '../tuning';
+import { FEEL, ICE } from '../tuning';
 import { blendedColor, colorToNumber, fillFraction, layers, liquidMl } from '../sim/liquid/Vessel';
 import { ingredient } from '../sim/data';
 import type { World, WorldItem } from '../core/World';
@@ -17,6 +17,16 @@ const GLASS_WALL = 7;
 const BOTTLE_BODY = 0x2b3138;
 const METAL = 0x9aa8b4;
 const HIGHLIGHT = 0x7fd4a0;
+/** Warm and loud: it has to beat everything else on the bar for attention. */
+const GUIDE_COLOR = 0xffc857;
+
+const GUIDE_STYLE = new TextStyle({
+  fontFamily: 'ui-monospace, Consolas, monospace',
+  fontSize: 18,
+  fontWeight: '700',
+  fill: 0xffc857,
+  stroke: { color: 0x0b0e11, width: 4 },
+});
 
 const LABEL_STYLE = new TextStyle({
   fontFamily: 'ui-monospace, Consolas, monospace',
@@ -40,6 +50,10 @@ export class ItemView {
   private wobblePhase = 0;
   private lastX = 0;
   private highlight = 0;
+  /** Teaching aids drawn over everything: the "touch this" ring and the fill line. */
+  private readonly guide = new Graphics();
+  private readonly guideLabel: Text;
+  private guidePulse = 0;
 
   constructor(item: WorldItem) {
     this.item = item;
@@ -48,7 +62,20 @@ export class ItemView {
     this.label = new Text({ text: item.label, style: LABEL_STYLE });
     this.label.anchor.set(0.5);
 
-    this.container.addChild(this.body, this.liquid, this.gloss, this.label);
+    this.guideLabel = new Text({ text: '', style: GUIDE_STYLE });
+    // Under the glass, centred. Beside it, the label ran into the next vessel;
+    // above it, the bottle you are pouring from hides it.
+    this.guideLabel.anchor.set(0.5, 0);
+    this.guideLabel.visible = false;
+
+    this.container.addChild(
+      this.body,
+      this.liquid,
+      this.gloss,
+      this.label,
+      this.guide,
+      this.guideLabel,
+    );
     this.drawStatic();
   }
 
@@ -222,6 +249,8 @@ export class ItemView {
     const wants = world.hoveredTargetId === item.id ? 1 : 0;
     this.highlight = damp(this.highlight, wants, 16, dtSec);
 
+    this.drawGuide(world, dtSec);
+
     if (item.kind === 'station' || item.kind === 'seat') {
       this.drawStationOverlay(world);
       return;
@@ -385,6 +414,62 @@ export class ItemView {
         color: 0xffffff,
         alpha: 0.45,
       });
+    }
+  }
+  /**
+   * The tutorial's two aids. A ring that breathes around the one thing to touch
+   * next, and a fill line on the glass: "pour about half a second" produced a
+   * Margarita scoring 57 when followed faithfully, "pour to the line" does not.
+   */
+  private drawGuide(world: World, dtSec: number): void {
+    const g = this.guide;
+    const item = this.item;
+    g.clear();
+    this.guideLabel.visible = false;
+
+    const pointed = world.guide.highlightId === item.id;
+    const target = world.guide.target?.vesselId === item.id ? world.guide.target : null;
+    if (!pointed && !target) return;
+
+    this.guidePulse += dtSec * 4;
+
+    if (pointed) {
+      const breathe = 0.5 + 0.5 * Math.sin(this.guidePulse);
+      const pad = 12 + breathe * 6;
+      g.roundRect(
+        -item.width / 2 - pad,
+        -item.height - pad,
+        item.width + pad * 2,
+        item.height + pad * 2,
+        14,
+      ).stroke({
+        width: 4,
+        color: GUIDE_COLOR,
+        alpha: 0.45 + breathe * 0.5,
+      });
+    }
+
+    if (target) {
+      const v = item.vessel;
+      const innerW = item.width - GLASS_WALL * 2;
+      const innerH = item.height - GLASS_WALL;
+      // Ice takes up room in the glass, so the line sits where the surface will be.
+      const occupied = target.totalMl + v.ice * ICE.CUBE_ML;
+      const level = Math.min(1, occupied / v.capacityMl) * innerH;
+      const y = -GLASS_WALL - level;
+
+      // Dashed, so it reads as a guide and never as liquid.
+      for (let x = -innerW / 2 - 8; x < innerW / 2 + 8; x += 14) {
+        g.rect(x, y - 2, 8, 4).fill({ color: GUIDE_COLOR, alpha: 0.95 });
+      }
+      g.poly([innerW / 2 + 10, y, innerW / 2 + 22, y - 8, innerW / 2 + 22, y + 8]).fill({
+        color: GUIDE_COLOR,
+      });
+
+      const now = Math.round(Object.values(v.contents).reduce((a, b) => a + b, 0));
+      this.guideLabel.text = `${target.label} to the line: ${now} / ${target.totalMl} ml`;
+      this.guideLabel.position.set(0, 40);
+      this.guideLabel.visible = true;
     }
   }
 }

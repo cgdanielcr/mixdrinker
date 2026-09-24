@@ -34,10 +34,13 @@ export class TitleScreen {
   readonly root = panel('title-screen');
   private readonly seedInput = document.createElement('input');
   private readonly continueButton = button('Continue the week', false);
+  private readonly tutorialButton = button('Learn the ropes');
+  private readonly startButton = button('Start a run', false);
   private readonly metaLine = document.createElement('p');
 
   onStart: ((seed: number | null) => void) | null = null;
   onContinue: (() => void) | null = null;
+  onTutorial: (() => void) | null = null;
 
   constructor() {
     const title = document.createElement('h1');
@@ -52,7 +55,8 @@ export class TitleScreen {
     this.seedInput.className = 'seed-input';
     this.seedInput.inputMode = 'numeric';
 
-    const start = button('Start a run');
+    const start = this.startButton;
+    this.tutorialButton.addEventListener('click', () => this.onTutorial?.());
     start.addEventListener('click', () => {
       const raw = Number(this.seedInput.value.trim());
       this.onStart?.(Number.isFinite(raw) && raw > 0 ? raw >>> 0 : null);
@@ -61,7 +65,7 @@ export class TitleScreen {
 
     const buttons = document.createElement('div');
     buttons.className = 'summary-buttons';
-    buttons.append(start, this.continueButton);
+    buttons.append(this.tutorialButton, start, this.continueButton);
 
     this.metaLine.className = 'tagline dim';
 
@@ -71,6 +75,10 @@ export class TitleScreen {
   show(meta: Meta, hasSavedRun: boolean): void {
     this.root.hidden = false;
     this.continueButton.hidden = !hasSavedRun;
+    // Whoever has never played gets the tutorial as the obvious first button.
+    const firstTime = meta.runsPlayed === 0;
+    this.tutorialButton.className = firstTime ? 'summary-button' : 'summary-button ghost';
+    this.startButton.className = firstTime ? 'summary-button ghost' : 'summary-button';
     this.metaLine.textContent = meta.runsPlayed
       ? `${meta.runsPlayed} runs · ${meta.weeksFinished} weeks finished · ${meta.timesFired} times fired · best reputation ${Math.round(meta.bestReputation)}`
       : '';

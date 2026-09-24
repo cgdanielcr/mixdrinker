@@ -5,6 +5,78 @@ Format per session: what was tried, what felt good, what didn't, numbers that ch
 
 ---
 
+## 2026-09-24 — The tutorial
+
+Second playtest, second verdict: _"its too much, too fast. I need a step by
+step tutorial, one drink at a time, starting from the easiest."_
+
+§7 assumed the recipe book alone would teach the bar. It does not. Ten
+bottles, eleven stations and a five-seat rush with no guidance is a wall, and
+§7's own acceptance test ("a person who has never seen the game can make a
+Margarita... with no text instructions besides the book") is now falsified by
+the first person who tried.
+
+### What it is
+
+Four lessons, one drink each, easiest first: **Cola → Gin & Tonic →
+Margarita → Martini.** Twenty-eight steps in all. Each step is one sentence,
+a gold ring breathes around the one thing to touch, and nothing moves on until
+you have done it. No clock, nobody walks out, and cut-off is disabled so a
+beginner cannot strand the lesson by refusing their only customer. "Learn the
+ropes" is the primary title button for anyone who has never played.
+
+The Cola is a new tutorial-only recipe. It is not on the bar menu, so it does
+not disturb the Phase 3 tuning.
+
+### The finding that shaped it
+
+The first draft said things like "pour for about half a second". A probe that
+followed those instructions exactly produced:
+
+| drink       | score  | why                       |
+| ----------- | ------ | ------------------------- |
+| Cola        | 92     | `warm`                    |
+| Gin & Tonic | 75     | too much gin              |
+| Margarita   | **57** | too much of everything    |
+| Martini     | 71     | too much gin and vermouth |
+
+A tutorial that teaches you to fail is worse than none. The cause is the same
+one Daniel hit: **a beginner cannot see how much they have poured.** So every
+pour step now draws a dashed **fill line** on the glass with a live readout
+("cola to the line: 120 / 200 ml"). Pouring to the lines gives **Cola 98, G&T
+99, Margarita 100, Martini 100**, and a test now asserts every lesson's drink
+comes back accepted.
+
+The lines exist only in the tutorial. A real night has none — that is where the
+free-pour skill from §6 is supposed to live.
+
+### Two model fixes it exposed
+
+- **Mixers now live in the fridge.** Cola, soda, juices and syrups start at
+  4°C; spirits stay at room temperature on the back bar. Before, a Cola poured
+  straight over ice was tagged `warm` however well it was made.
+- **Ice chills faster**: `SETTLE_CHILL_C_PER_SEC` 0.8 → 3.2. Pouring over ice
+  gets a drink cold in seconds, not in half a minute.
+
+### Layout lessons
+
+The tutorial panel sits top-centre where the HUD would be (there is no clock to
+show). First draft, it sat exactly on top of the customer's order bubble, so you
+could not see what they wanted. The tutorial customer now sits in the leftmost
+seat and the panel is narrowed to clear it. The fill-line label went beside the
+glass (ran into the next vessel), then above it (hidden by the bottle you are
+pouring from), and finally below it, the one place that is always clear.
+
+### Testing it
+
+The strongest test drives all 28 steps using the same sim operations the game
+uses, and asserts each one actually advances. If a step's wording and its
+completion check ever disagree, that test names the step it got stuck on.
+`vitest.config.ts` now includes `src/**`, not just `src/sim/**`, so core logic
+like this can be tested.
+
+---
+
 ## 2026-09-23 — First contact with a human, and the bug it found
 
 Daniel opened it and said: _"if I do 'start run' I have no missions, nothing to

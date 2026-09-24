@@ -4,7 +4,7 @@ import { defineConfig } from 'vitest/config';
 // render/ is exempt but must contain no gameplay logic.
 export default defineConfig({
   test: {
-    include: ['src/sim/**/*.test.ts'],
+    include: ['src/**/*.test.ts'],
     environment: 'node',
   },
 });

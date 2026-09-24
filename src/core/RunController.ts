@@ -15,13 +15,16 @@ import { nightRecordFrom } from '../sim/night/Summary';
 import type { NightTotals } from '../sim/night/Summary';
 import { randomSeed } from '../sim/run/Rng';
 import { createNight, nightTotals } from './Night';
+import { Tutorial } from './Tutorial';
+import type { TutorialView } from './Tutorial';
 import type { Game } from './Game';
 import type { World } from './World';
+import { bottleTemperature } from './World';
 import { ShopScreen } from '../ui/Screens';
 import type { Meta } from './Save';
 import { clearRun, loadMeta, loadRun, saveMeta, saveRun } from './Save';
 
-export type Phase = 'title' | 'night' | 'nightOver' | 'shop' | 'runOver';
+export type Phase = 'title' | 'tutorial' | 'night' | 'nightOver' | 'shop' | 'runOver';
 
 export class RunController {
   phase: Phase = 'title';
@@ -29,6 +32,13 @@ export class RunController {
   meta: Meta = loadMeta();
   /** Totals for the night just finished, for the summary screen. */
   lastTotals: NightTotals | null = null;
+
+  /** The guided lessons, while they are running. */
+  tutorial: Tutorial | null = null;
+  /** Drinks handed over during the tutorial — how serve steps know they are done. */
+  tutorialServes = 0;
+  /** What the last customer made of the last tutorial drink, shown as feedback. */
+  lastTutorialServe: { verdict: string; line: string; score: number } | null = null;
 
   private readonly game: Game;
   private readonly world: World;
@@ -121,6 +131,67 @@ export class RunController {
     this.meta = loadMeta();
   }
 
+  // -------------------------------------------------------------- tutorial
+
+  /**
+   * One drink at a time, easiest first, with no clock and nobody walking out.
+   * Written because the first playtest was, rightly, "too much, too fast".
+   */
+  startTutorial(): void {
+    const definition = bar('dive');
+    // A throwaway run, only so the bar can be filled; it is never saved.
+    this.resetBar(createRun(1));
+    const night = createNight(1, definition, 1);
+    night.plan.arrivals = [];
+    this.game.startNight(night);
+    // The clock never moves: patience never drains and nobody leaves.
+    this.game.clock.paused = true;
+    this.game.allowCutOff = false;
+
+    this.tutorial = new Tutorial();
+    this.tutorialServes = 0;
+    this.lastTutorialServe = null;
+    this.phase = 'tutorial';
+  }
+
+  /** Called every frame while the tutorial is up. */
+  updateTutorial(): TutorialView | null {
+    const tutorial = this.tutorial;
+    const night = this.game.night;
+    if (!tutorial || !night) return null;
+
+    tutorial.update({ world: this.world, night, serves: this.tutorialServes });
+    const view = tutorial.view();
+
+    this.world.guide.highlightId = view.finished ? null : view.highlight;
+    this.world.guide.target =
+      view.finished || !view.target
+        ? null
+        : { vesselId: view.target.vessel, totalMl: view.target.totalMl, label: view.target.label };
+    return view;
+  }
+
+  /** A drink was handed over while the tutorial was running. */
+  noteTutorialServe(verdict: string, line: string, score: number): void {
+    this.tutorialServes += 1;
+    this.lastTutorialServe = { verdict, line, score };
+  }
+
+  skipTutorialStep(): void {
+    this.tutorial?.skip();
+  }
+
+  /** Leave the tutorial, straight into a real week or back to the title. */
+  endTutorial(startRun: boolean): void {
+    this.tutorial = null;
+    this.world.guide.highlightId = null;
+    this.world.guide.target = null;
+    this.game.clock.paused = false;
+    this.game.allowCutOff = true;
+    if (startRun) this.startRun(null);
+    else this.toTitle();
+  }
+
   // ------------------------------------------------------------------ shop
 
   buy(what: string): void {
@@ -166,6 +237,8 @@ export class RunController {
       if (item.ingredientId) {
         const filled = pourFromCellar(run, item.ingredientId);
         if (filled > 0) item.vessel.contents[item.ingredientId] = filled;
+        // discard() puts everything at room temperature; mixers go back in the fridge.
+        item.vessel.chilledC = bottleTemperature(item.ingredientId);
       }
     }
     this.world.heldId = null;

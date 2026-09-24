@@ -540,3 +540,125 @@ body {
 .hud-stat.rep.failing {
   color: #ff9a8f;
 }
+
+/* ------------------------------------------------------------- tutorial */
+
+/* Where the HUD sits, because during the tutorial the instruction is the
+   thing to watch — there is no clock. Large enough to read at a glance with
+   your hands busy. */
+.tutorial-panel {
+  position: fixed;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  /* Narrow enough to leave the leftmost seat's order bubble in view. */
+  width: min(560px, 52vw);
+  padding: 14px 20px 14px;
+  background: #11171bf2;
+  border: 2px solid #ffc857;
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+  z-index: 25;
+  user-select: none;
+}
+
+.tutorial-lesson {
+  font-size: 11px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: #ffc857;
+  margin-bottom: 6px;
+}
+
+.tutorial-intro {
+  margin: 0 0 8px;
+  font-size: 12px;
+  font-style: italic;
+  color: var(--dim);
+  line-height: 1.5;
+}
+
+.tutorial-instruction {
+  margin: 0 0 10px;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.45;
+  color: var(--ink);
+}
+
+.tutorial-instruction.pulse {
+  animation: tutorial-pulse 0.6s ease-out;
+}
+
+@keyframes tutorial-pulse {
+  0% {
+    color: #ffc857;
+    transform: translateX(-4px);
+  }
+  100% {
+    color: var(--ink);
+    transform: translateX(0);
+  }
+}
+
+.tutorial-progress {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.tutorial-progress .dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #ffffff20;
+}
+
+.tutorial-progress .dot.done {
+  background: #7fd4a0;
+}
+
+.tutorial-progress .dot.now {
+  background: #ffc857;
+  box-shadow: 0 0 0 3px #ffc85740;
+}
+
+.tutorial-feedback {
+  margin: 0 0 10px;
+  padding: 8px 12px;
+  border-radius: 7px;
+  font-size: 13px;
+  background: #ffffff0d;
+}
+
+.tutorial-feedback.loved,
+.tutorial-feedback.fine {
+  border-left: 3px solid #7fd4a0;
+}
+
+.tutorial-feedback.poor,
+.tutorial-feedback.rejected {
+  border-left: 3px solid #ff9a8f;
+}
+
+.tutorial-feedback .score {
+  float: right;
+  font-weight: 700;
+}
+
+.tutorial-controls {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.summary-button.small {
+  padding: 5px 11px;
+  font-size: 11px;
+}
+
+.tutorial-finish p {
+  margin: 0 0 12px;
+  font-size: 14px;
+  line-height: 1.6;
+}

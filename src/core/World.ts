@@ -3,7 +3,8 @@
  * Geometry lives here because "did the stream hit the glass?" is a gameplay
  * question (HANDOVER.md §6), not a rendering one.
  */
-import { LAYOUT, NIGHT, POUR } from '../tuning';
+import { LAYOUT, MIXING, NIGHT, POUR } from '../tuning';
+import { ingredient } from '../sim/data';
 import { createVessel } from '../sim/liquid/Vessel';
 import type { Vessel } from '../sim/types';
 
@@ -79,6 +80,16 @@ export interface World {
   /** The jigger just hit a measuring mark and stopped taking liquid. */
   jiggerStopped: boolean;
   bookOpen: boolean;
+  /**
+   * Teaching aids, set by the tutorial and ignored everywhere else: the one
+   * item to look at, and a fill line on a glass showing where to stop pouring.
+   */
+  guide: Guide;
+}
+
+export interface Guide {
+  highlightId: string | null;
+  target: { vesselId: string; totalMl: number; label: string } | null;
 }
 
 const BOTTLE_ROW_Y = 1035;
@@ -146,7 +157,10 @@ export function createWorld(): World {
     items.push({
       id: `bottle_${entry.id}`,
       kind: 'bottle',
-      vessel: createVessel(`bottle_${entry.id}`, 'bottle', { contents: { [entry.id]: 700 } }),
+      vessel: createVessel(`bottle_${entry.id}`, 'bottle', {
+        contents: { [entry.id]: 700 },
+        chilledC: bottleTemperature(entry.id),
+      }),
       x,
       y: BOTTLE_ROW_Y,
       homeX: x,
@@ -237,7 +251,15 @@ export function createWorld(): World {
     shakeIntensity: 0,
     jiggerStopped: false,
     bookOpen: false,
+    guide: { highlightId: null, target: null },
   };
+}
+
+/** Fridge for mixers and juices, back bar for spirits. */
+export function bottleTemperature(ingredientId: string): number {
+  return MIXING.FRIDGE_CATEGORIES.includes(ingredient(ingredientId).category)
+    ? MIXING.FRIDGE_C
+    : MIXING.ROOM_TEMP_C;
 }
 
 export function itemById(world: World, id: string | null): WorldItem | null {

@@ -76,12 +76,23 @@ export const MIXING = {
   SHAKE_CHILL_C_PER_SEC: 9,
   /** Dilution per second for a drink sitting on ice. */
   SETTLE_DILUTION_ML_PER_SEC: 0.35,
-  /** Chill rate for a drink sitting on ice, °C per second. */
-  SETTLE_CHILL_C_PER_SEC: 0.8,
+  /**
+   * Chill rate for a drink sitting on ice, °C per second. Pouring over ice
+   * gets a drink cold in seconds; at 0.8 a Cola served straight away was
+   * tagged `warm` even when everything was done right.
+   */
+  SETTLE_CHILL_C_PER_SEC: 3.2,
   /** Warming rate with no ice present, °C per second. */
   WARM_C_PER_SEC: 0.25,
   /** Room temperature, and the floor a chilled drink approaches. */
   ROOM_TEMP_C: 20,
+  /**
+   * Mixers, juices and syrups live in the fridge; spirits sit on the back bar.
+   * With everything at room temperature a Cola poured straight over ice was
+   * tagged `warm` however well it was made.
+   */
+  FRIDGE_C: 4,
+  FRIDGE_CATEGORIES: ['juice', 'mixer', 'syrup'] as readonly string[],
   ICE_TEMP_C: -3,
 } as const;
 

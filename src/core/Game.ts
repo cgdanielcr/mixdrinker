@@ -41,7 +41,15 @@ export type GameEvent =
   | { type: 'pickup' }
   | { type: 'putdown' }
   | { type: 'rejected'; x: number; y: number }
-  | { type: 'served'; verdict: string; seat: number; x: number; y: number }
+  | {
+      type: 'served';
+      verdict: string;
+      line: string;
+      score: number;
+      seat: number;
+      x: number;
+      y: number;
+    }
   | { type: 'cutOff'; justified: boolean; x: number; y: number }
   | { type: 'nightOver' };
 
@@ -53,6 +61,11 @@ export class Game {
   readonly clock = new Clock();
   /** Null until a night is started, so Phase 1 sandbox play still works. */
   night: NightState | null = null;
+  /**
+   * Off during the tutorial: a beginner holding on the customer's seat with
+   * empty hands would refuse them service and strand the lesson.
+   */
+  allowCutOff = true;
 
   private readonly input: Input;
   private accumulator = 0;
@@ -200,6 +213,8 @@ export class Game {
     this.events.push({
       type: 'served',
       verdict: outcome.reaction.verdict,
+      line: outcome.reaction.line,
+      score: outcome.reaction.adjustedScore,
       seat: seat.seatIndex ?? 0,
       x: seat.x,
       y: seat.y - 40,
@@ -332,7 +347,11 @@ export class Game {
     const p = this.input.pointer;
 
     const eligible =
-      seat?.kind === 'seat' && world.heldId === null && p.down && !this.pressConsumed;
+      this.allowCutOff &&
+      seat?.kind === 'seat' &&
+      world.heldId === null &&
+      p.down &&
+      !this.pressConsumed;
 
     if (!eligible || !this.night) {
       world.cutOffProgress = 0;

@@ -1,0 +1,11 @@
+{
+  "id": "cola_glass",
+  "name": "Cola",
+  "glass": "highball",
+  "ingredients": [{ "id": "cola", "ml": 200, "toleranceMl": 45 }],
+  "method": "build",
+  "ice": "cubes",
+  "garnish": [],
+  "serveWithIce": true,
+  "weights": { "ingredients": 4, "method": 1, "glass": 2, "ice": 2 }
+}
