@@ -459,3 +459,32 @@ Spec for all art is `ART.md`. First batch of painted art is in.
 
 Bottles (ART.md §3) were in the priority list but not in this batch. Then the
 `rocks` glass `_back/_front/_mask` set, to prove the layered-vessel approach.
+
+## Art pass 2: first painted glass (rocks)
+
+Glass spec is now `ART_GLASSES.md`: **one image per vessel**, not
+back/front/mask layers (three separately drawn layers never align).
+
+- Draw order per vessel: liquid Graphics → painted glass sprite → gloss
+  (meniscus, ice, salt, garnish). The liquid is masked by the glass's **outer
+  silhouette, computed at load** in `Art.ts#silhouetteOf`: flood the outside in
+  from the image border through pixels with alpha < 40; whatever is not reached
+  is the glass. If the flood gets into the cavity (outline has a gap), it logs a
+  warning and the liquid is left unclipped rather than invisible.
+- Fill range per vessel is hand-measured into `VESSEL_ART` (fractions of the
+  sprite): rocks `floor 0.794` (top of the solid base, so the floor ellipse
+  fills), `rim 0.134` (under the near rim edge), `innerW 0.66`.
+  `ItemView#cavity()` is the one place liquid, overflow line and the tutorial
+  fill guide get their geometry from.
+- Rocks art is square (~1:1, spec said 0.86), so the rocks hit box went
+  100×116 → **110×110**. Positions unchanged; 12 px between the two rocks.
+- Source 1448×1086, crop `264,92 921×921`, scaled to 220×220 (2×).
+- Observed at 4.5× zoom: liquid reads through the cavity, grenadine pools in
+  the base ellipse, walls hide the block's edges. Code-drawn ice cubes now look
+  off-style next to the painted glass — they want art (ART.md §4).
+
+### Next session starts here
+
+Coupe, highball, mixing glass (ART_GLASSES.md order step 2). Each needs a
+`VESSEL_ART` entry measured from its image. Coupe is the real test of the
+mask, since its bowl is curved. Bottles are still outstanding.

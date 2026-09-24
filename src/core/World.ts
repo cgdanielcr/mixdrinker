@@ -119,8 +119,9 @@ const VESSELS: {
   height: number;
   x: number;
 }[] = [
-  { key: 'rocks', kind: 'glass', label: 'ROCKS', width: 100, height: 116, x: 118 },
-  { key: 'rocks', kind: 'glass', label: 'ROCKS', width: 100, height: 116, x: 240 },
+  // Rocks is square to match its painted art (ART_GLASSES.md allows the hit box to follow the art).
+  { key: 'rocks', kind: 'glass', label: 'ROCKS', width: 110, height: 110, x: 118 },
+  { key: 'rocks', kind: 'glass', label: 'ROCKS', width: 110, height: 110, x: 240 },
   { key: 'coupe', kind: 'glass', label: 'COUPE', width: 126, height: 112, x: 382 },
   { key: 'highball', kind: 'glass', label: 'HIGHBALL', width: 84, height: 178, x: 512 },
   { key: 'shaker', kind: 'shaker', label: 'SHAKER', width: 92, height: 196, x: 634 },

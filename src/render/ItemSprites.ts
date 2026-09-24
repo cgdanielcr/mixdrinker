@@ -4,14 +4,14 @@
  *
  * Reads world state, never writes it.
  */
-import { Container, Graphics, Sprite, Text, TextStyle } from 'pixi.js';
+import { Container, Graphics, Sprite, Text, TextStyle, type Texture } from 'pixi.js';
 import { FEEL, ICE, LAYOUT } from '../tuning';
 import { blendedColor, colorToNumber, fillFraction, layers, liquidMl } from '../sim/liquid/Vessel';
 import { ingredient } from '../sim/data';
 import type { World, WorldItem } from '../core/World';
 import { tiltAngleRad } from '../core/World';
 import { damp, mixColors } from './Juice';
-import { art, INK, type ArtKey } from './Art';
+import { art, INK, silhouette, VESSEL_ART, type ArtKey, type VesselArt } from './Art';
 
 /** Items resting below this line sit on the work band's paper, not the dark bar. */
 const WORK_TOP = LAYOUT.HEIGHT * (LAYOUT.BAND_CUSTOMER + LAYOUT.BAND_COUNTER);
@@ -58,6 +58,8 @@ export class ItemView {
   private guidePulse = 0;
   private onPaper = false;
   private hasArt = false;
+  /** Painted glass: drawn over the liquid, which it clips and frames. */
+  private readonly glassArt: VesselArt | null;
 
   constructor(item: WorldItem) {
     this.item = item;
@@ -75,19 +77,26 @@ export class ItemView {
 
     const painted = this.paintedSprite();
     if (painted) this.container.addChild(painted);
+    const spec =
+      item.kind === 'bottle' ? undefined : VESSEL_ART[item.vessel.glassType ?? item.kind];
+    const glassTexture = spec ? art(spec.key) : null;
+    this.glassArt = spec && glassTexture ? spec : null;
     // Dark ink on the painted paper; the old pale strokes vanish against it.
     this.onPaper = art('workArea') !== null && item.homeY > WORK_TOP;
     // Bottle labels sit on the dark bottle body, not the paper.
     const inkLabel = this.onPaper && item.kind !== 'bottle';
     if (inkLabel) this.label.style.fill = INK;
-    this.container.addChild(
-      this.body,
-      this.liquid,
-      this.gloss,
-      this.label,
-      this.guide,
-      this.guideLabel,
-    );
+    this.container.addChild(this.body, this.liquid);
+    if (this.glassArt && glassTexture) {
+      this.container.addChild(this.fitted(glassTexture));
+      const mask = silhouette(this.glassArt.key);
+      if (mask) {
+        const maskSprite = this.fitted(mask);
+        this.container.addChild(maskSprite);
+        this.liquid.mask = maskSprite;
+      }
+    }
+    this.container.addChild(this.gloss, this.label, this.guide, this.guideLabel);
     this.drawStatic();
     // Faint white read as a soft glow on the dark bar; faint ink just looks grey.
     if (inkLabel) this.label.alpha = Math.min(0.8, this.label.alpha * 1.8);
@@ -106,6 +115,28 @@ export class ItemView {
     sprite.scale.set(this.item.kind === 'seat' ? this.item.width / texture.width : scale);
     this.hasArt = true;
     return sprite;
+  }
+
+  /** A sprite filling this item's box, bottom-centre anchored like the Graphics. */
+  private fitted(texture: Texture): Sprite {
+    const sprite = new Sprite(texture);
+    sprite.anchor.set(0.5, 1);
+    sprite.setSize(this.item.width, this.item.height);
+    return sprite;
+  }
+
+  /** The space liquid fills, in item-local coordinates (y up is negative). */
+  private cavity(): { innerW: number; innerH: number; bottom: number } {
+    const { width, height } = this.item;
+    const spec = this.glassArt;
+    if (spec) {
+      return {
+        innerW: width * spec.innerW,
+        innerH: (spec.floor - spec.rim) * height,
+        bottom: -(1 - spec.floor) * height,
+      };
+    }
+    return { innerW: width - GLASS_WALL * 2, innerH: height - GLASS_WALL, bottom: -GLASS_WALL };
   }
 
   private get glassStroke(): number {
@@ -196,6 +227,10 @@ export class ItemView {
       }
 
       default: {
+        this.label.position.set(0, 22);
+        this.label.style.fontSize = 12;
+        this.label.alpha = 0.4;
+        if (this.glassArt) break;
         // Open-topped tumbler: two walls and a base, so it reads as a glass.
         g.roundRect(-w / 2, -h, GLASS_WALL, h, 3).fill({ color: this.glassStroke, alpha: 0.55 });
         g.roundRect(w / 2 - GLASS_WALL, -h, GLASS_WALL, h, 3).fill({
@@ -364,10 +399,8 @@ export class ItemView {
     g.clear();
     gloss.clear();
 
-    const innerW = item.width - GLASS_WALL * 2;
-    const innerH = item.height - GLASS_WALL;
+    const { innerW, innerH, bottom } = this.cavity();
     const left = -innerW / 2;
-    const bottom = -GLASS_WALL;
     const level = Math.max(0, Math.min(1, this.shownFill)) * innerH;
 
     const parts = layers(v);
@@ -432,7 +465,7 @@ export class ItemView {
 
     // Near the rim, the glass warns you before it overflows.
     if (this.shownFill > 0.9) {
-      gloss.rect(left, -item.height + GLASS_WALL, innerW, 4).fill({
+      gloss.rect(left, bottom - innerH, innerW, 4).fill({
         color: 0xff5c5c,
         alpha: (this.shownFill - 0.9) * 8,
       });
@@ -496,12 +529,11 @@ export class ItemView {
 
     if (target) {
       const v = item.vessel;
-      const innerW = item.width - GLASS_WALL * 2;
-      const innerH = item.height - GLASS_WALL;
+      const { innerW, innerH, bottom } = this.cavity();
       // Ice takes up room in the glass, so the line sits where the surface will be.
       const occupied = target.totalMl + v.ice * ICE.CUBE_ML;
       const level = Math.min(1, occupied / v.capacityMl) * innerH;
-      const y = -GLASS_WALL - level;
+      const y = bottom - level;
 
       // Dashed, so it reads as a guide and never as liquid.
       for (let x = -innerW / 2 - 8; x < innerW / 2 + 8; x += 14) {

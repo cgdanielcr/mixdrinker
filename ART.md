@@ -52,7 +52,7 @@ computes the liquid clip from it.
 **Superseded by [ART_GLASSES.md](ART_GLASSES.md):** one image per vessel, no
 separate back/front/mask layers. The list below is kept for ticking off.
 
-- [ ] `glass/rocks` — 100×116. Short, heavy base.
+- [x] `glass/rocks` — delivered square; hit box is now 110×110.
 - [ ] `glass/coupe` — 126×112. Mask = bowl only, not the stem.
 - [ ] `glass/highball` — 84×178. Tall, straight.
 - [ ] `glass/shot` — ~50×60. In data, not yet on screen. Low priority.
