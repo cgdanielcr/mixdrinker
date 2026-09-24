@@ -488,3 +488,37 @@ back/front/mask layers (three separately drawn layers never align).
 Coupe, highball, mixing glass (ART_GLASSES.md order step 2). Each needs a
 `VESSEL_ART` entry measured from its image. Coupe is the real test of the
 mask, since its bowl is curved. Bottles are still outstanding.
+
+## Art pass 3: the rest of the glassware and tools
+
+All vessels now have painted art: coupe, highball, shot, shaker (+ cap),
+mixing glass (+ bar spoon), jigger. Rocks was pass 2.
+
+- **Every outline was closed**, so the flood-filled silhouette mask worked for
+  all glass-bodied vessels unchanged. The coupe's curved bowl clips correctly.
+- **`VESSEL_ART` grew three options** (`Art.ts`):
+  - `bodyH` + `cap`: the shaker body takes the bottom 78.6 % of its 92×196 box;
+    the cap sprite sits on top, overlapping the body's rim by 14 px. Fill
+    fractions are relative to the body sprite, not the item box.
+  - `spoon`: bar spoon (23×170) stands in the mixing glass behind the liquid,
+    so it reads as submerged. It swirls with `world.shakeIntensity` while
+    stirring and settles back against the wall. Not yet seen moving: the
+    stir needs a real drag and the preview pane cannot drive one.
+  - `opening`: the jigger was delivered **opaque on purpose** (real ones are
+    metal). Its drink is drawn on top of the sprite as a surface ellipse in
+    the top opening, radius scale `0.3 + 0.7 × fill`. The cone's true cube
+    root law filled the opening by a quarter full; linear keeps 15 ml vs 60 ml
+    distinguishable. The jigger hard-stops at its mark anyway.
+- **Meniscus moved from `gloss` to the liquid layer**, so the silhouette mask
+  clips it. On the coupe it ran across the walls.
+- **Hit boxes follow the art:** coupe 126→120 wide, mixing glass 104→95 wide,
+  jigger 84×80→71×100 (the art is tall). Positions unchanged.
+- **Bar spoon** was drawn diagonally; rotated −25.2° (principal axis of its
+  alpha) before cropping.
+- Sources measured by dumping alpha to raw bytes (PowerShell LockBits) and
+  analysing in Node: far faster than GetPixel.
+
+### Next session starts here
+
+Bottles (ART.md §3), then ice cubes and the ice bin: the code-drawn cubes look
+off-style next to painted glass. Play a stir to check the spoon.

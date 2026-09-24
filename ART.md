@@ -53,12 +53,12 @@ computes the liquid clip from it.
 separate back/front/mask layers. The list below is kept for ticking off.
 
 - [x] `glass/rocks` — delivered square; hit box is now 110×110.
-- [ ] `glass/coupe` — 126×112. Mask = bowl only, not the stem.
-- [ ] `glass/highball` — 84×178. Tall, straight.
-- [ ] `glass/shot` — ~50×60. In data, not yet on screen. Low priority.
-- [ ] `tool/shaker` — 92×196, plus `tool/shaker_cap.png` as a separate sprite.
-- [ ] `tool/mixing_glass` — 104×150, plus `tool/bar_spoon.png` (~20×170).
-- [ ] `tool/jigger` — 84×80. Mask = top cup only.
+- [x] `glass/coupe` — hit box now 120×112.
+- [x] `glass/highball` — 84×178.
+- [x] `glass/shot` — 50×60. Loaded; not on the bar yet.
+- [x] `tool/shaker` — body + cap in a 92×196 box.
+- [x] `tool/mixing_glass` — hit box now 95×150; bar spoon stands in it.
+- [x] `tool/jigger` — opaque metal; hit box now 71×100.
 
 ## 3. Bottles — priority 1 (58×168 each, single sprite)
 

@@ -119,14 +119,14 @@ const VESSELS: {
   height: number;
   x: number;
 }[] = [
-  // Rocks is square to match its painted art (ART_GLASSES.md allows the hit box to follow the art).
+  // Hit boxes follow the painted art's proportions (ART_GLASSES.md), not the other way round.
   { key: 'rocks', kind: 'glass', label: 'ROCKS', width: 110, height: 110, x: 118 },
   { key: 'rocks', kind: 'glass', label: 'ROCKS', width: 110, height: 110, x: 240 },
-  { key: 'coupe', kind: 'glass', label: 'COUPE', width: 126, height: 112, x: 382 },
+  { key: 'coupe', kind: 'glass', label: 'COUPE', width: 120, height: 112, x: 382 },
   { key: 'highball', kind: 'glass', label: 'HIGHBALL', width: 84, height: 178, x: 512 },
   { key: 'shaker', kind: 'shaker', label: 'SHAKER', width: 92, height: 196, x: 634 },
-  { key: 'mixing_glass', kind: 'mixing_glass', label: 'MIXING', width: 104, height: 150, x: 762 },
-  { key: 'jigger', kind: 'jigger', label: 'JIGGER', width: 84, height: 80, x: 884 },
+  { key: 'mixing_glass', kind: 'mixing_glass', label: 'MIXING', width: 95, height: 150, x: 762 },
+  { key: 'jigger', kind: 'jigger', label: 'JIGGER', width: 71, height: 100, x: 884 },
 ];
 
 const STATIONS: {

@@ -56,10 +56,11 @@ its edges. Ice, garnish, salt rims and the liquid itself are all drawn by code.
 - **Palette:** ink-black outline, cream highlights, halftone/grain on the walls
   only (not the empty inside). Metal tools use cool grey walls with crisp
   highlights so they read as steel next to the glasses.
-- **Metal is see-through too.** Shaker, jigger: real ones are opaque, but the
-  player has to see how much is in them. Draw them in the same convention as
-  the glasses: outline and walls, empty inside. The steel colour of the walls
-  is what says "metal".
+- **Exception: opaque metal is allowed.** The jigger was delivered solid, as
+  real jiggers are. The game then shows the drink as its surface inside the
+  top opening, growing as it fills. That works for small cups you look down
+  into; a tall opaque vessel would hide its level, so keep glass-bodied ones
+  see-through.
 
 ## Size and format
 

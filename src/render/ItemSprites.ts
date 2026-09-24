@@ -1,6 +1,7 @@
 /**
- * Placeholder art: flat shapes with readable silhouettes (HANDOVER.md §14).
- * Bottles are told apart by colour and label text. No time spent on art.
+ * Items on the bar. Vessels with painted art (Art.ts, ART_GLASSES.md) draw it
+ * over their liquid; everything else is still placeholder Graphics: flat
+ * shapes with readable silhouettes (HANDOVER.md §14).
  *
  * Reads world state, never writes it.
  */
@@ -60,6 +61,10 @@ export class ItemView {
   private hasArt = false;
   /** Painted glass: drawn over the liquid, which it clips and frames. */
   private readonly glassArt: VesselArt | null;
+  private spoon: Sprite | null = null;
+  private spoonRestX = 0;
+  private spoonPhase = 0;
+  private stir = 0;
 
   constructor(item: WorldItem) {
     this.item = item;
@@ -86,16 +91,9 @@ export class ItemView {
     // Bottle labels sit on the dark bottle body, not the paper.
     const inkLabel = this.onPaper && item.kind !== 'bottle';
     if (inkLabel) this.label.style.fill = INK;
-    this.container.addChild(this.body, this.liquid);
-    if (this.glassArt && glassTexture) {
-      this.container.addChild(this.fitted(glassTexture));
-      const mask = silhouette(this.glassArt.key);
-      if (mask) {
-        const maskSprite = this.fitted(mask);
-        this.container.addChild(maskSprite);
-        this.liquid.mask = maskSprite;
-      }
-    }
+    this.container.addChild(this.body);
+    if (this.glassArt && glassTexture) this.addVesselArt(this.glassArt, glassTexture);
+    else this.container.addChild(this.liquid);
     this.container.addChild(this.gloss, this.label, this.guide, this.guideLabel);
     this.drawStatic();
     // Faint white read as a soft glow on the dark bar; faint ink just looks grey.
@@ -117,11 +115,56 @@ export class ItemView {
     return sprite;
   }
 
-  /** A sprite filling this item's box, bottom-centre anchored like the Graphics. */
-  private fitted(texture: Texture): Sprite {
+  /**
+   * Layer order, back to front: spoon, liquid, glass (which clips the liquid
+   * to its silhouette), cap. Opaque tins flip liquid and glass: the drink is
+   * drawn into the opening on top.
+   */
+  private addVesselArt(spec: VesselArt, texture: Texture): void {
+    const item = this.item;
+    const bodyH = item.height * (spec.bodyH ?? 1);
+
+    const spoonTexture = spec.spoon ? art(spec.spoon.key) : null;
+    if (spec.spoon && spoonTexture) {
+      const spoon = new Sprite(spoonTexture);
+      spoon.anchor.set(0.5, 1);
+      spoon.setSize(spec.spoon.width, spec.spoon.height);
+      // Resting on the floor, leaning on the far wall.
+      spoon.y = -(1 - spec.floor) * bodyH - 2;
+      this.spoonRestX = item.width * spec.innerW * 0.22;
+      this.spoon = spoon;
+      this.container.addChild(spoon);
+    }
+
+    const glass = this.fitted(texture, bodyH);
+    if (spec.opening) {
+      this.container.addChild(glass, this.liquid);
+    } else {
+      this.container.addChild(this.liquid, glass);
+      const mask = silhouette(spec.key);
+      if (mask) {
+        const maskSprite = this.fitted(mask, bodyH);
+        this.container.addChild(maskSprite);
+        this.liquid.mask = maskSprite;
+      }
+    }
+
+    const capTexture = spec.cap ? art(spec.cap.key) : null;
+    if (spec.cap && capTexture) {
+      const cap = new Sprite(capTexture);
+      cap.anchor.set(0.5, 1);
+      const width = item.width * spec.cap.width;
+      cap.setSize(width, (width * capTexture.height) / capTexture.width);
+      cap.y = -bodyH + spec.cap.overlapPx;
+      this.container.addChild(cap);
+    }
+  }
+
+  /** A sprite of this item's width, bottom-centre anchored like the Graphics. */
+  private fitted(texture: Texture, height = this.item.height): Sprite {
     const sprite = new Sprite(texture);
     sprite.anchor.set(0.5, 1);
-    sprite.setSize(this.item.width, this.item.height);
+    sprite.setSize(this.item.width, height);
     return sprite;
   }
 
@@ -130,10 +173,11 @@ export class ItemView {
     const { width, height } = this.item;
     const spec = this.glassArt;
     if (spec) {
+      const spriteH = height * (spec.bodyH ?? 1);
       return {
         innerW: width * spec.innerW,
-        innerH: (spec.floor - spec.rim) * height,
-        bottom: -(1 - spec.floor) * height,
+        innerH: (spec.floor - spec.rim) * spriteH,
+        bottom: -(1 - spec.floor) * spriteH,
       };
     }
     return { innerW: width - GLASS_WALL * 2, innerH: height - GLASS_WALL, bottom: -GLASS_WALL };
@@ -180,6 +224,12 @@ export class ItemView {
       }
 
       case 'shaker': {
+        if (this.glassArt) {
+          this.label.position.set(0, 20);
+          this.label.style.fontSize = 12;
+          this.label.alpha = 0.45;
+          break;
+        }
         // A tin: tapered body with a cap, so it never reads as a glass.
         const capH = h * 0.22;
         g.poly([-w / 2, -h + capH, w / 2, -h + capH, w / 2 - 7, 0, -w / 2 + 7, 0]).fill({
@@ -194,6 +244,12 @@ export class ItemView {
       }
 
       case 'jigger': {
+        if (this.glassArt) {
+          this.label.position.set(0, 20);
+          this.label.style.fontSize = 12;
+          this.label.alpha = 0.45;
+          break;
+        }
         // Two cones back to back — the classic double jigger silhouette.
         g.poly([-w / 2, -h, w / 2, -h, w / 2 - 16, -h * 0.42, -w / 2 + 16, -h * 0.42]).fill({
           color: METAL,
@@ -316,6 +372,8 @@ export class ItemView {
           ? 1
           : 10;
 
+    this.animateSpoon(world, held, dtSec);
+
     // Highlight a station the held vessel could actually use.
     const wants = world.hoveredTargetId === item.id ? 1 : 0;
     this.highlight = damp(this.highlight, wants, 16, dtSec);
@@ -391,6 +449,47 @@ export class ItemView {
     );
   }
 
+  /** The spoon swirls while you stir, and settles back against the wall. */
+  private animateSpoon(world: World, held: boolean, dtSec: number): void {
+    if (!this.spoon) return;
+    const target = held && world.stirring ? world.shakeIntensity : 0;
+    this.stir = damp(this.stir, target, 10, dtSec);
+    this.spoonPhase += dtSec * (3 + this.stir * 9);
+    const swirl = Math.sin(this.spoonPhase) * this.stir;
+    const reach = this.cavity().innerW * 0.3;
+    this.spoon.x = this.spoonRestX * (1 - this.stir) + swirl * reach;
+    this.spoon.rotation = 0.12 * (1 - this.stir) + swirl * 0.15;
+  }
+
+  /**
+   * Opaque tin: the drink is the surface seen in the top opening. The cup is a
+   * cone, so the surface widens and rises as it fills; that is the level cue.
+   */
+  private drawOpeningLiquid(o: NonNullable<VesselArt['opening']>): void {
+    const fill = Math.max(0, Math.min(1, this.shownFill));
+    if (fill <= 0.01 || liquidMl(this.item.vessel) <= 0) return;
+    const { width, height } = this.item;
+    // Linear, not the cone's true cube root: that filled the opening by a
+    // quarter full and left nothing to read between 15 and 60 ml.
+    const s = 0.3 + 0.7 * fill;
+    const rx = o.rx * width * s;
+    const ry = o.ry * height * s;
+    const cy = -height + o.cy * height + (1 - s) * o.ry * height * 0.8;
+    const color = colorToNumber(blendedColor(this.item.vessel));
+    this.liquid.ellipse(0, cy, rx, ry).fill({ color, alpha: 0.95 });
+    this.gloss.ellipse(-rx * 0.3, cy - ry * 0.3, rx * 0.35, ry * 0.3).fill({
+      color: 0xffffff,
+      alpha: 0.25,
+    });
+    if (fill > 0.9) {
+      this.gloss.ellipse(0, cy, rx, ry).stroke({
+        width: 2.5,
+        color: 0xff5c5c,
+        alpha: (fill - 0.9) * 8,
+      });
+    }
+  }
+
   private drawVesselLiquid(): void {
     const item = this.item;
     const v = item.vessel;
@@ -398,6 +497,10 @@ export class ItemView {
     const gloss = this.gloss;
     g.clear();
     gloss.clear();
+    if (this.glassArt?.opening) {
+      this.drawOpeningLiquid(this.glassArt.opening);
+      return;
+    }
 
     const { innerW, innerH, bottom } = this.cavity();
     const left = -innerW / 2;
@@ -433,11 +536,13 @@ export class ItemView {
         );
       }
       points.push(left + innerW, surfaceY + 6, left, surfaceY + 6);
-      gloss.poly(points).fill({ color: 0xffffff, alpha: 0.22 });
+      // On the liquid layer, so the glass's silhouette clips it and its walls
+      // cover it: drawn on top, the line ran across a coupe's walls.
+      g.poly(points).fill({ color: 0xffffff, alpha: 0.22 });
       // Clear spirits vanish against the cream paper. An inked surface line
       // keeps the fill level readable, which is the thing you are pouring to.
       if (this.onPaper) {
-        gloss.poly(points.slice(0, (steps + 1) * 2), false).stroke({
+        g.poly(points.slice(0, (steps + 1) * 2), false).stroke({
           width: 2.5,
           color: INK,
           alpha: 0.6,

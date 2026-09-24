@@ -15,6 +15,14 @@ import grain from '../assets/art/grain.png';
 import recipeCard from '../assets/art/recipe_card.png';
 import serveSpot from '../assets/art/serve_spot.png';
 import glassRocks from '../assets/art/glass_rocks.png';
+import glassCoupe from '../assets/art/glass_coupe.png';
+import glassHighball from '../assets/art/glass_highball.png';
+import glassShot from '../assets/art/glass_shot.png';
+import toolShaker from '../assets/art/tool_shaker.png';
+import toolShakerCap from '../assets/art/tool_shaker_cap.png';
+import toolMixingGlass from '../assets/art/tool_mixing_glass.png';
+import toolJigger from '../assets/art/tool_jigger.png';
+import toolBarSpoon from '../assets/art/tool_bar_spoon.png';
 
 const SOURCES = {
   customerBand,
@@ -24,6 +32,14 @@ const SOURCES = {
   recipeCard,
   serveSpot,
   glassRocks,
+  glassCoupe,
+  glassHighball,
+  glassShot,
+  toolShaker,
+  toolShakerCap,
+  toolMixingGlass,
+  toolJigger,
+  toolBarSpoon,
 } as const;
 
 export type ArtKey = keyof typeof SOURCES;
@@ -33,9 +49,20 @@ export const INK = 0x1d1a17;
 
 /**
  * Where liquid sits inside a painted vessel (ART_GLASSES.md), measured by hand
- * from the art. Fractions of the sprite, 0 = top / left edge.
+ * from the art. Fractions of the vessel sprite, 0 = top / left edge.
  */
 export interface VesselArt {
+  /** Share of the item's height the vessel sprite takes; the rest is for a cap. */
+  bodyH?: number;
+  /** A lid drawn over the body's rim. Width as a share of the item's width. */
+  cap?: { key: ArtKey; width: number; overlapPx: number };
+  /** Stands in the vessel; swirls while stirring. Display size in px. */
+  spoon?: { key: ArtKey; width: number; height: number };
+  /**
+   * Opaque metal: no see-through walls, so the liquid shows as its surface in
+   * the top opening instead. Ellipse centre and radii as sprite fractions.
+   */
+  opening?: { cy: number; rx: number; ry: number };
   key: ArtKey;
   /** Inner floor: where the liquid starts. Below it is solid base. */
   floor: number;
@@ -48,6 +75,32 @@ export interface VesselArt {
 /** Keyed by glass type, or by vessel kind for tools. */
 export const VESSEL_ART: Readonly<Record<string, VesselArt>> = {
   rocks: { key: 'glassRocks', floor: 0.794, rim: 0.134, innerW: 0.66 },
+  // The bowl's curve comes from the silhouette mask; floor is the bowl's bottom.
+  coupe: { key: 'glassCoupe', floor: 0.418, rim: 0.165, innerW: 0.9 },
+  highball: { key: 'glassHighball', floor: 0.782, rim: 0.08, innerW: 0.66 },
+  shot: { key: 'glassShot', floor: 0.703, rim: 0.176, innerW: 0.66 },
+  mixing_glass: {
+    key: 'toolMixingGlass',
+    floor: 0.729,
+    rim: 0.101,
+    innerW: 0.66,
+    spoon: { key: 'toolBarSpoon', width: 23, height: 170 },
+  },
+  shaker: {
+    key: 'toolShaker',
+    floor: 0.803,
+    rim: 0.108,
+    innerW: 0.66,
+    bodyH: 0.786,
+    cap: { key: 'toolShakerCap', width: 1.03, overlapPx: 14 },
+  },
+  jigger: {
+    key: 'toolJigger',
+    floor: 0.54,
+    rim: 0.1,
+    innerW: 0.8,
+    opening: { cy: 0.063, rx: 0.443, ry: 0.037 },
+  },
 };
 
 /** Below this alpha a pixel counts as empty when tracing a glass's outline. */
@@ -67,6 +120,7 @@ export async function loadArt(): Promise<void> {
     }),
   );
   for (const spec of Object.values(VESSEL_ART)) {
+    if (spec.opening) continue;
     const texture = loaded[spec.key];
     const mask = texture ? silhouetteOf(texture, spec) : null;
     if (mask) silhouettes[spec.key] = mask;
