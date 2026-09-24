@@ -12,6 +12,7 @@ import { Game } from './core/Game';
 import { Input } from './core/Input';
 import { createWorld, itemById } from './core/World';
 import { BarScene } from './render/BarScene';
+import { loadArt } from './render/Art';
 import { Sfx } from './audio/Sfx';
 import { DebugPanel } from './ui/DebugPanel';
 import { RecipeBook } from './ui/RecipeBook';
@@ -40,6 +41,7 @@ async function main(): Promise<void> {
   if (!mount) throw new Error('#app is missing from index.html');
   mount.append(app.canvas);
 
+  await loadArt();
   const world = createWorld();
   const scene = new BarScene(world);
   app.stage.addChild(scene.stage);

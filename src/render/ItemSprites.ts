@@ -4,15 +4,17 @@
  *
  * Reads world state, never writes it.
  */
-import { Container, Graphics, Text, TextStyle } from 'pixi.js';
-import { FEEL, ICE } from '../tuning';
+import { Container, Graphics, Sprite, Text, TextStyle } from 'pixi.js';
+import { FEEL, ICE, LAYOUT } from '../tuning';
 import { blendedColor, colorToNumber, fillFraction, layers, liquidMl } from '../sim/liquid/Vessel';
 import { ingredient } from '../sim/data';
 import type { World, WorldItem } from '../core/World';
 import { tiltAngleRad } from '../core/World';
 import { damp, mixColors } from './Juice';
+import { art, INK, type ArtKey } from './Art';
 
-const GLASS_STROKE = 0xd8e6ef;
+/** Items resting below this line sit on the work band's paper, not the dark bar. */
+const WORK_TOP = LAYOUT.HEIGHT * (LAYOUT.BAND_CUSTOMER + LAYOUT.BAND_COUNTER);
 const GLASS_WALL = 7;
 const BOTTLE_BODY = 0x2b3138;
 const METAL = 0x9aa8b4;
@@ -54,12 +56,15 @@ export class ItemView {
   private readonly guide = new Graphics();
   private readonly guideLabel: Text;
   private guidePulse = 0;
+  private onPaper = false;
+  private hasArt = false;
 
   constructor(item: WorldItem) {
     this.item = item;
     this.lastX = item.x;
 
-    this.label = new Text({ text: item.label, style: LABEL_STYLE });
+    // Own copy: labels set their own size and ink, which would leak through a shared style.
+    this.label = new Text({ text: item.label, style: LABEL_STYLE.clone() });
     this.label.anchor.set(0.5);
 
     this.guideLabel = new Text({ text: '', style: GUIDE_STYLE });
@@ -68,6 +73,13 @@ export class ItemView {
     this.guideLabel.anchor.set(0.5, 0);
     this.guideLabel.visible = false;
 
+    const painted = this.paintedSprite();
+    if (painted) this.container.addChild(painted);
+    // Dark ink on the painted paper; the old pale strokes vanish against it.
+    this.onPaper = art('workArea') !== null && item.homeY > WORK_TOP;
+    // Bottle labels sit on the dark bottle body, not the paper.
+    const inkLabel = this.onPaper && item.kind !== 'bottle';
+    if (inkLabel) this.label.style.fill = INK;
     this.container.addChild(
       this.body,
       this.liquid,
@@ -77,6 +89,27 @@ export class ItemView {
       this.guideLabel,
     );
     this.drawStatic();
+    // Faint white read as a soft glow on the dark bar; faint ink just looks grey.
+    if (inkLabel) this.label.alpha = Math.min(0.8, this.label.alpha * 1.8);
+  }
+
+  /** Painted sprite for this item, bottom-centre anchored like the Graphics. */
+  private paintedSprite(): Sprite | null {
+    const key: ArtKey | null =
+      this.item.kind === 'seat' ? 'serveSpot' : this.item.station === 'book' ? 'recipeCard' : null;
+    const texture = key ? art(key) : null;
+    if (!texture) return null;
+    const sprite = new Sprite(texture);
+    sprite.anchor.set(0.5, 1);
+    // Fit the hit box's height and keep the painting's proportions.
+    const scale = this.item.height / texture.height;
+    sprite.scale.set(this.item.kind === 'seat' ? this.item.width / texture.width : scale);
+    this.hasArt = true;
+    return sprite;
+  }
+
+  private get glassStroke(): number {
+    return this.onPaper ? INK : 0xd8e6ef;
   }
 
   private drawStatic(): void {
@@ -152,8 +185,10 @@ export class ItemView {
       case 'seat': {
         // The bit of counter a drink gets set down on. Deliberately faint:
         // the customer above it is the thing to look at, not the rectangle.
-        g.roundRect(-w / 2, -h, w, h, 6).fill({ color: 0xffffff, alpha: 0.05 });
-        g.roundRect(-w / 2, -h, w, h, 6).stroke({ width: 2, color: 0xffffff, alpha: 0.12 });
+        if (!this.hasArt) {
+          g.roundRect(-w / 2, -h, w, h, 6).fill({ color: 0xffffff, alpha: 0.05 });
+          g.roundRect(-w / 2, -h, w, h, 6).stroke({ width: 2, color: 0xffffff, alpha: 0.12 });
+        }
         this.label.position.set(0, 18);
         this.label.style.fontSize = 11;
         this.label.alpha = 0.25;
@@ -162,13 +197,13 @@ export class ItemView {
 
       default: {
         // Open-topped tumbler: two walls and a base, so it reads as a glass.
-        g.roundRect(-w / 2, -h, GLASS_WALL, h, 3).fill({ color: GLASS_STROKE, alpha: 0.55 });
+        g.roundRect(-w / 2, -h, GLASS_WALL, h, 3).fill({ color: this.glassStroke, alpha: 0.55 });
         g.roundRect(w / 2 - GLASS_WALL, -h, GLASS_WALL, h, 3).fill({
-          color: GLASS_STROKE,
+          color: this.glassStroke,
           alpha: 0.55,
         });
         g.roundRect(-w / 2, -GLASS_WALL, w, GLASS_WALL, 3).fill({
-          color: GLASS_STROKE,
+          color: this.glassStroke,
           alpha: 0.55,
         });
         this.label.position.set(0, 22);
@@ -219,6 +254,7 @@ export class ItemView {
         break;
 
       case 'book':
+        if (this.hasArt) break;
         g.roundRect(-w / 2, -h, w, h, 5).fill({ color: 0x7d3b2e });
         g.roundRect(-w / 2 + 9, -h + 9, w - 18, h - 18, 3).fill({ color: 0xc9b391 });
         g.rect(-w / 2 + 4, -h, 7, h).fill({ color: 0x5d2b21 });
@@ -365,6 +401,15 @@ export class ItemView {
       }
       points.push(left + innerW, surfaceY + 6, left, surfaceY + 6);
       gloss.poly(points).fill({ color: 0xffffff, alpha: 0.22 });
+      // Clear spirits vanish against the cream paper. An inked surface line
+      // keeps the fill level readable, which is the thing you are pouring to.
+      if (this.onPaper) {
+        gloss.poly(points.slice(0, (steps + 1) * 2), false).stroke({
+          width: 2.5,
+          color: INK,
+          alpha: 0.6,
+        });
+      }
     }
 
     this.drawIce(gloss, innerW, bottom, level);

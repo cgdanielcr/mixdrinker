@@ -8,3 +8,6 @@ coverage/
 # Local dev tooling (machine-specific paths)
 .claude/
 dist-single/
+
+# Raw art exports; processed copies live in src/assets/art
+art/

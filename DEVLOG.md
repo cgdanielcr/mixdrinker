@@ -431,3 +431,31 @@ All in `src/tuning.ts`. Starting values, none playtested:
 2. Ice, shake and the shaker → glass strain, which unlocks the Margarita end to
    end and the first real `Evaluate` run on a drink a human made.
 3. Then rim, garnish, sink, recipe book.
+
+## Art pass 1: backgrounds, counter, serve spots, recipe card, grain
+
+Spec for all art is `ART.md`. First batch of painted art is in.
+
+- **Pipeline.** Raw exports go in `art/` (git-ignored). Processed copies live in
+  `src/assets/art/` and are **imported** through `src/render/Art.ts`, not served
+  from `public/`, so the one-file build inlines them (now 1.8 MB). `loadArt()`
+  runs before the scene is built. Any texture that fails to load stays null and
+  the old Graphics placeholder draws instead.
+- **Processing was done by hand** (PowerShell + System.Drawing, one-off). Crops:
+  backgrounds inset ~40 px past their ragged borders and cut to band aspect;
+  counter source had a checkerboard painted into its RGB above row 220, cropped
+  to rows 219–451 so the top lip survives; sprites trimmed to content. Bands
+  are JPEG q84, sprites PNG.
+- **Grain** is a `TilingSprite` over the whole shaken container at alpha 0.6.
+- **Cream work band broke contrast** for things drawn pale-on-dark. Items resting
+  on the paper (`homeY` below the counter) now use `INK` (0x1d1a17) for glass
+  walls and labels, labels at up to 1.8× their old alpha. Bottle labels stay
+  white (they sit on the dark bottle body). Clear liquids were near-invisible
+  on cream, so glasses on paper get an inked surface line along the meniscus.
+- **Bug fixed in passing:** every item label shared one `TextStyle`, so each
+  `style.fontSize = …` in `drawStatic` changed all of them. Labels now clone it.
+
+### Next session starts here
+
+Bottles (ART.md §3) were in the priority list but not in this batch. Then the
+`rocks` glass `_back/_front/_mask` set, to prove the layered-vessel approach.
